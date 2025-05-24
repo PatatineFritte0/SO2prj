@@ -1,0 +1,9 @@
+#init [0.5+ii0.5, 0.5-i0.5]
+#init [0.5+i0.5, 0.5-ia0.5]
+#init [0.5+ii0.5, 0.5-i0.5]
+#init [0.5+i0.5, '0.5-i0.5]
+
+#qubits w
+#qubits a#qubits 1
+
+
