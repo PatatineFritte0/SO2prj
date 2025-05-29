@@ -1,191 +1,132 @@
 #include <ctype.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "structure.h"
-#include "function.h"
 #include <math.h>
 
-int count_char(const char* str, char target) {
-    int count = 0;
-    while (*str) {
-        if (*str == target) count++;
-        str++;
-    }
-    return count;
-}
+#include "header/structure.h"
+#include "header/costants.h"
+#include "header/functions.h"
 
-char *deleteChar(const char *string, const char ch) {
-    size_t len = strlen(string);
-    char *newString = malloc(len + 1); // +1 per il terminatore null
-    if (!newString) return NULL; // gestione fallimento allocazione
-
-    int j = 0;
-    for (size_t i = 0; i < len; i++) {
-        if (string[i] != ch) {
-            newString[j++] = string[i];
+Complex** createMatrix2D(int x, int y) {
+    Complex** matrix = malloc(x * sizeof(Complex*));
+    if (!matrix) return nullptr;
+    for (int i = 0; i<x; i++) {
+        matrix[i] = malloc(y * sizeof(Complex*));
+        if (!matrix[i]) {
+            for (int j = 0; j < i; j++) free(matrix[j]);
+            free(matrix);
+            return nullptr;
         }
     }
-    newString[j] = '\0';
-    return newString;
+    return matrix;
 }
 
-Complex stringToComplex(const char* string) {
-    Complex result = {0.0, 0.0};
+Complex** matrixMoltiplication(Complex ** complex1, Complex ** complex2, const int dim) {
+    printf("CIAO");
+    Complex** ris = createMatrix2D(dim,dim);
 
-    //inizializzo e copio la stringa sulla quale andro' a lavorare
-    char input[256] = "";
-    strncpy(input, string, sizeof(input));
-    input[sizeof(input) - 1] = '\0';
-
-    //controllo se e' reale senza parte immaginaria
-    char* i_ptr = strchr(input, 'i');
-    if (!i_ptr) {
-        result.real = atof(input);
-        return result;
-    }
-
-    *i_ptr = '\0';  // Rimuove la 'i' all indirizzo della stringa e lo rimpiazza con \0
-
-    // Se è solo "i", "+i" o "-i"
-    if (strcmp(input, "") == 0) {
-        result.img = 1.0;
-        return result;
-    }else if (strcmp(input, "+") == 0) {
-        result.img = 1.0;
-        return result;
-    } else if (strcmp(input, "-") == 0) {
-        result.img = -1.0;
-        return result;
-    }
-
-    *i_ptr = 'i';
-
-    // Cerca il segno che separa reale e immaginaria
-    int sep = 0;
-    for (int i = (int)strlen(input) - 1; i > 0; i--) {
-        if (input[i] == '+' || input[i] == '-') {
-            sep = i;
-            break;
-        }
-    }
-
-    if (sep) {
-        char imag[256] ="", real[256] ="";
-        strncpy(imag, input, sep);
-        imag[sep] = '\0';
-        //copia la stringa dal + o -
-        strcpy(real, &input[sep]);
-
-        // Determina chi è reale e chi immaginario
-        if (strchr(imag, 'i')) {
-            char* clearImg = deleteChar(imag, 'i');
-            result.img = atof(clearImg);
-            result.real = atof(real);
-            free(clearImg);
-        } else {
-            char* clearReal = deleteChar(real, 'i');
-            result.real = atof(imag);
-            result.img = atof(clearReal);
-            free(clearReal);
-        }
-    } else {
-        result.img = atof(input);
-    }
-
-    return result;
-}
-
-bool getInitVector(char* init, Complex* vector) {
-    int indexBuffer = 0, indexInit = 0;
-    char buffer[100] = "\0";
-    //controllo se il comando e' in init
-
-    int nFindNumbers = 0;
-    while (indexBuffer == 0 && isPresent("#init", init, &indexInit)) {
-        memset(buffer, '\0', sizeof(buffer));
-        buffer[0] = '\0';
-        // salto gli spazi fra lui ed il dato
-        while (init[indexInit] == ' ' || init[indexInit] == '\t'){ indexInit++; }
-
-        if (init[indexInit] == '[') {
-            while (init[indexInit] != ']' && init[indexInit] != '\0') {
-                indexInit++;
-
-                if(init[indexInit] == '+' || init[indexInit] == '-' || init[indexInit] == 'i' || init[indexInit] == '.' || isdigit(init[indexInit])) {
-                    buffer[indexBuffer++] = init[indexInit];
-                }else if (init[indexInit] == ',' || init[indexInit] == ']') {
-
-                    buffer[indexBuffer] = '\0';
-
-                    if (count_char(buffer, 'i') <= 1) {
-                        vector[nFindNumbers] = (Complex){0,0};
-                        vector[nFindNumbers++] = stringToComplex(buffer);
-                        //vector[nFindNumbers] = stringToComplex("-5");
-                        //printf("Re: %.4f, img: %.4f \n", vector[nFindNumbers].real, vector[nFindNumbers].img);
-                        //printf("%s\n", buffer);
-                        //nFindNumbers++;
-                    } else {
-                        // c'e un errore di sintassi
-                        buffer[0] = '\0';
-                        indexBuffer = 0;
-                        nFindNumbers = 0;
-                        break;
-                    }
-                    //riinizializzo il buffer
-                    indexBuffer = 0;
-                 }else if (init[indexInit] == ' ' || init[indexInit] == '\t') {
-                    //niente
-                }else {
-                    //riconosco che c'e' un errore di sintassi
-                    buffer[0] = '\0';
-                    indexBuffer = 0;
-                    nFindNumbers = 0;
-                    break;
-                }
+    for(int i = 0; i < dim; i++) {
+        for(int j = 0; j < dim; j++) {
+            Complex sum = {0,0};
+            for(int k = 0; k < dim; k++) {
+                Complex temp = mul(&complex1[i][k], &complex2[k][j]);
+                sum = add(&sum, &temp);
             }
+            ris[i][j] = sum;
         }
     }
 
-    //controllo se sono stati trovati dati validi
-    if (buffer[indexBuffer] == '\0') {
-        return false;
+    return ris;
+}
+
+void freeMatrix2D(Complex** matrix, int dim) {
+    if (!matrix) return;
+
+    for (int i = 0; i < dim; i++) { if (matrix[i]) free(matrix[i]); }
+    free(matrix);
+}
+
+void printMatrix(Complex **matrix, const int dim) {
+    for (int j = 0; j<dim; j++) {
+        printf("[");
+        for (int k = 0; k<dim; k++) {
+            printf(" (%d) (%d) Re: %.4f, img: %.4f,", j, k, matrix[j][k].real, matrix[j][k].img);
+        }
+        printf(" ]\n");
     }
-    return true;
 }
 
 int main() {
     char *circ = readFile("../data/circ-ex.txt");
     char *init = readFile("../data/init-ex.txt");
+
     if (circ != NULL && init != NULL) {
         printf("%s\n", circ);
         printf("%s\n", init);
 
-        int nQubit = getNqbit(init);
+        const int nQubit = getNqbit(init);
 
         if (nQubit != 0) {
             printf("numero Qubits: %d\n", nQubit);
 
-            double dim = pow(2, nQubit);
-            Complex *initVector = malloc( (int)dim * sizeof(Complex) );
-            if (getInitVector(init, initVector)) {
+            const int dim = (int)pow(2, nQubit);
+
+            Complex *initVector = malloc( dim * sizeof(Complex) );
+
+            if (getInitVector(init, initVector, dim)) {
                 for (int i = 0; i<dim; i++) {
                     printf("Complesso%d: img: %.2f, reale: %.2f \n", i, initVector[i].img, initVector[i].real);
                 }
 
+                char order[MAX_MATRIX][MAX_NAME_MATRIX] = {0};
+                if (getOrderMatrix(circ, order)) {
 
+                    int nMatrix = 0;
+                    //conto tutte le stringhe valide
+                    for (int i = 0; i<MAX_MATRIX; i++) {
+                        if (order[i][0] == '\0') break;
+                        nMatrix++;
+                    }
 
-            }else {
-                printf("I DATI INIT NON SONO VALIDI O NON PRESENTI NEL FILE\n");
-            }
-        }else {
-            printf("I QUBITS NON SONO VALIDI O NON PRESENTI NEL FILE\n");
-        }
+                    Complex*** circuit = getMatrix(dim, circ, nMatrix, order);
+                    if (circuit != NULL) {
 
+                        for (int i = 0; i<nMatrix; i++) {
+                            printf("MATRICE : %s\n", order[i]);
+                            printMatrix(circuit[i], dim);
+                        }
 
+                        //la inizializzo una matrice identita'
+                        Complex** ris = createMatrix2D(dim, dim);
+                        for (int i = 0; i<dim; i++) {
+                            for (int j = 0; j<dim; j++) {
+                                ris[i][j] = (i==j) ? (Complex){1,0} : (Complex){0,0};
+                            }
+                        }
+
+                        for (int i = 0; i<nMatrix; i++) {
+                            printf("HEY");
+                            Complex** temp = matrixMoltiplication(ris, circuit[i], dim);
+                            //printMatrix(ris,dim);
+                            freeMatrix2D(ris, dim);
+                            ris = temp;
+                        }
+
+                        printf("MOLTIPLICAZIONE TRA MATRICI:\n");
+                        printMatrix(ris, dim);
+
+                        freeMatrix2D(ris, dim);
+
+                    }else { printf("ERRORE NELLA DICHIARAZIONE DELLE MATRCICI DI CIRCUITO\n"); }
+                    freeMatrix3D(circuit, nMatrix, dim);
+                }else { printf("ERRORE NELLA DICHIARAZIONE NOMI CIRCUITI\n"); }
+            }else { printf("I DATI INIT NON SONO VALIDI O NON PRESENTI NEL FILE\n"); }
+            free(initVector);
+        }else { printf("I QUBITS NON SONO VALIDI O NON PRESENTI NEL FILE\n"); }
+    }else {
+        printf("ERRORE LETTURA FILE\n");
     }
-
 
     return 0;
 }
