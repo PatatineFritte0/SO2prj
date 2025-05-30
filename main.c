@@ -1,84 +1,42 @@
+#include <complex.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
 
 #include "header/structure.h"
 #include "header/costants.h"
 #include "header/functions.h"
 
-Complex** createMatrix2D(int x, int y) {
-    Complex** matrix = malloc(x * sizeof(Complex*));
-    if (!matrix) return nullptr;
-    for (int i = 0; i<x; i++) {
-        matrix[i] = malloc(y * sizeof(Complex*));
-        if (!matrix[i]) {
-            for (int j = 0; j < i; j++) free(matrix[j]);
-            free(matrix);
-            return nullptr;
-        }
-    }
-    return matrix;
-}
-
-Complex** matrixMoltiplication(Complex ** complex1, Complex ** complex2, const int dim) {
-    printf("CIAO");
-    Complex** ris = createMatrix2D(dim,dim);
-
-    for(int i = 0; i < dim; i++) {
-        for(int j = 0; j < dim; j++) {
-            Complex sum = {0,0};
-            for(int k = 0; k < dim; k++) {
-                Complex temp = mul(&complex1[i][k], &complex2[k][j]);
-                sum = add(&sum, &temp);
-            }
-            ris[i][j] = sum;
-        }
-    }
-
-    return ris;
-}
-
-void freeMatrix2D(Complex** matrix, int dim) {
-    if (!matrix) return;
-
-    for (int i = 0; i < dim; i++) { if (matrix[i]) free(matrix[i]); }
-    free(matrix);
-}
-
-void printMatrix(Complex **matrix, const int dim) {
-    for (int j = 0; j<dim; j++) {
-        printf("[");
-        for (int k = 0; k<dim; k++) {
-            printf(" (%d) (%d) Re: %.4f, img: %.4f,", j, k, matrix[j][k].real, matrix[j][k].img);
-        }
-        printf(" ]\n");
-    }
-}
-
 int main() {
-    char *circ = readFile("../data/circ-ex.txt");
-    char *init = readFile("../data/init-ex.txt");
+    //cerco i file nella directory del programma
+    char *circ = readFile("../data/circ.txt");
+    char *init = readFile("../data/init.txt");
 
     if (circ != NULL && init != NULL) {
         printf("%s\n", circ);
         printf("%s\n", init);
 
+        //ottengo i qubits
         const int nQubit = getNqbit(init);
 
-        if (nQubit != 0) {
-            printf("numero Qubits: %d\n", nQubit);
-
+        if (nQubit > 0) {
+            printf("numero Qubits: %d\n\n", nQubit);
+            //se i qubits esistono e sono > 0 allora definisco la
+            //dimensione delle matrici e vettori da qui in avanti
             const int dim = (int)pow(2, nQubit);
 
-            Complex *initVector = malloc( dim * sizeof(Complex) );
+            //inizializzo il vettore di init
+            Complex* initVector = malloc( dim * sizeof(Complex) );
 
+            //controllo se esiste il vettore init e setto il valore in initVector
             if (getInitVector(init, initVector, dim)) {
-                for (int i = 0; i<dim; i++) {
-                    printf("Complesso%d: img: %.2f, reale: %.2f \n", i, initVector[i].img, initVector[i].real);
-                }
+                printf("VETTORE INIT:\n");
+                printVector(initVector, dim);
+                printf("\n");
 
+                //inizializzo order imponendo un massimo di
+                //matrici che puoi dichiarare con il nome annesso
                 char order[MAX_MATRIX][MAX_NAME_MATRIX] = {0};
                 if (getOrderMatrix(circ, order)) {
 
@@ -89,35 +47,50 @@ int main() {
                         nMatrix++;
                     }
 
+                    //inizializzo circuit come un array3D dove
+                    //1 dim: sono l'ordine di raccorta delle matrici a seconda
+                    //della disposizione di order
+                    //2-3 dim: sono righe e colonne delle matrici
                     Complex*** circuit = getMatrix(dim, circ, nMatrix, order);
                     if (circuit != NULL) {
 
-                        for (int i = 0; i<nMatrix; i++) {
+                        for (int i = nMatrix-1; i>=0; i--) {
                             printf("MATRICE : %s\n", order[i]);
                             printMatrix(circuit[i], dim);
                         }
 
-                        //la inizializzo una matrice identita'
-                        Complex** ris = createMatrix2D(dim, dim);
+                        //inizializzo una matrice identita'
+                        //essenziale per la moltiplicazione
+                        Complex** mulMatrix = createMatrix2D(dim, dim);
                         for (int i = 0; i<dim; i++) {
                             for (int j = 0; j<dim; j++) {
-                                ris[i][j] = (i==j) ? (Complex){1,0} : (Complex){0,0};
+                                mulMatrix[i][j] = (i==j) ? (Complex){1,0} : (Complex){0,0};
                             }
                         }
 
-                        for (int i = 0; i<nMatrix; i++) {
-                            printf("HEY");
-                            Complex** temp = matrixMoltiplication(ris, circuit[i], dim);
-                            //printMatrix(ris,dim);
-                            freeMatrix2D(ris, dim);
-                            ris = temp;
+                        //faccio la moltiplicazione fra le matrici trovate in ordine inverso
+                        for (int i = nMatrix-1; i>=0; i--) {
+                            Complex** temp = matrixMoltiplication(mulMatrix, circuit[i], dim);
+                            freeMatrix2D(mulMatrix, dim);
+                            mulMatrix = temp;
                         }
 
                         printf("MOLTIPLICAZIONE TRA MATRICI:\n");
-                        printMatrix(ris, dim);
+                        printMatrix(mulMatrix, dim);
 
-                        freeMatrix2D(ris, dim);
+                        printf("\nMOLTIPLICAZIONE TRA LA MATRICE MOLTIPLICATA CON IL VETTORE INIT\n");
+                        Complex* result = mulMatrixByVector(mulMatrix, initVector, dim);
+                        printVector(result, dim);
 
+                        printf("\nCONTROLLO SULLA CORRETTEZZA: ");
+
+                        if (isVectorCorrect(result, dim)) {
+                            printf("CORRETTO");
+                        }
+                        else { printf("NON CORRETTO"); }
+
+                        freeMatrix2D(mulMatrix, dim);
+                        free(result);
                     }else { printf("ERRORE NELLA DICHIARAZIONE DELLE MATRCICI DI CIRCUITO\n"); }
                     freeMatrix3D(circuit, nMatrix, dim);
                 }else { printf("ERRORE NELLA DICHIARAZIONE NOMI CIRCUITI\n"); }

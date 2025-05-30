@@ -2,12 +2,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tgmath.h>
 
 #include "../header/functions.h"
+
 #include "../header/costants.h"
 #include "../header/structure.h"
 
-inline char* readFile(const char* directory){
+//----------------------------------------------------------------------------------------------------------
+//-------------------------------------FILE MANAGEMENT FUNCTION---------------------------------------------
+//----------------------------------------------------------------------------------------------------------
+
+//questa funzione restituisce il contenuto del file in una stringa
+char* readFile(const char* directory){
     //apertura file
     FILE* file = fopen(directory, "r");
     if (file == NULL) {
@@ -41,8 +48,8 @@ inline char* readFile(const char* directory){
 //-----------------------------STRING MANIPULATION & DATA RECOVERY FUNCTIONS--------------------------------
 //----------------------------------------------------------------------------------------------------------
 
-//cerca di ottenere il numero di qubits se sono presenti in init
-inline int getNqbit (char* init){
+//questa funzione ottiene il numero di qubits se sono presenti in init
+int getNqbit (char* init){
     int indexBuffer = 0, indexInit = 0;
     char buffer[100] = "\0";
     //controllo se il comando e' in init
@@ -64,7 +71,9 @@ inline int getNqbit (char* init){
     return atoi(buffer);
 }
 
-inline bool getInitVector(char* init, Complex* vector, int dimention) {
+//questa funzione cerca di ottenere il vettore init (true)
+//in caso contrario restituisce false
+bool getInitVector(char* init, Complex* vector, int dimention) {
     int indexBuffer = 0, indexInit = 0;
     char buffer[100] = "\0";
 
@@ -126,7 +135,8 @@ inline bool getInitVector(char* init, Complex* vector, int dimention) {
     return true;
 }
 
-inline Complex stringToComplex(const char* string) {
+//questa funzione restituisce un numero complesso da una stringa
+Complex stringToComplex(const char* string) {
     //inizializzo un numero complesso a 0
     Complex result = {0.0, 0.0};
 
@@ -196,7 +206,8 @@ inline Complex stringToComplex(const char* string) {
     return result;
 }
 
-inline bool getOrderMatrix(const char* circ, char order[MAX_MATRIX][MAX_NAME_MATRIX]){
+//questa funzione cerca di ottenere l'ordine di matrici del circuito
+bool getOrderMatrix(const char* circ, char order[MAX_MATRIX][MAX_NAME_MATRIX]){
     int indexOrder = 0, indexName = 0;
     int indexCirc = 0;
 
@@ -231,7 +242,9 @@ inline bool getOrderMatrix(const char* circ, char order[MAX_MATRIX][MAX_NAME_MAT
     return true;
 }
 
-inline Complex*** getMatrix(const int dimention, const char* circ, const int nMatrix , char order[MAX_MATRIX][MAX_NAME_MATRIX]) {
+//questa funzione cerca di ottenere un vettore di matrici dato l'ordine con cui sono
+//state dichiarate
+Complex*** getMatrix(const int dimention, const char* circ, const int nMatrix , char order[MAX_MATRIX][MAX_NAME_MATRIX]) {
     //inizializzo la matrice di ritorno
     Complex*** orderMatrix = createMatrix3D(nMatrix,dimention,dimention);
     if (!orderMatrix) return nullptr;
@@ -344,7 +357,71 @@ inline Complex*** getMatrix(const int dimention, const char* circ, const int nMa
 //----------------------------MATRIX DECLARATIONS & OPERATION FUNCTIONS-------------------------------------
 //----------------------------------------------------------------------------------------------------------
 
-inline void freeMatrix3D(Complex*** m, int x, int y) {
+//questa funzione si occupa di fare la moltiplicazione tra matrici
+Complex** matrixMoltiplication(Complex** complex1, Complex** complex2, const int dim) {
+    Complex** ris = createMatrix2D(dim, dim);
+
+    //moltiplico le due matrici secondo le regole dell algebra classica
+    for(int i = 0; i < dim; i++) {
+        for(int j = 0; j < dim; j++) {
+            Complex sum = {0,0};
+            for(int k = 0; k < dim; k++) {
+                Complex temp = mul(&complex1[i][k], &complex2[k][j]);
+                sum = add(&sum, &temp);
+            }
+            ris[i][j] = sum;
+        }
+    }
+
+    return ris;
+}
+
+//questa funzione moltiplica una matrice per un vettore
+Complex* mulMatrixByVector(Complex** matrix, const Complex* vector, const int dim) {
+    Complex* ris = malloc(dim * sizeof(Complex));
+    if (!ris) {
+        return nullptr;
+    }
+
+    //moltiplico una matrice per un vettore secondo le regole dell'algebra base
+    for (int i = 0; i < dim; i++) {
+        Complex sum = {0,0};
+        for (int j = 0; j < dim; j++) {
+            Complex temp = mul(&matrix[i][j], &vector[j]);
+            sum = add(&sum, &temp);
+        }
+        ris[i] = sum;
+    }
+
+    return ris;
+}
+
+//questa funzione alloca nell'heap una matrice di Complex 2D
+Complex** createMatrix2D(int x, int y) {
+    Complex** matrix = malloc(x * sizeof(Complex*));
+
+    if (!matrix) return nullptr;
+    for (int i = 0; i<x; i++) {
+        matrix[i] = malloc(y * sizeof(Complex));
+        if (!matrix[i]) {
+            for (int j = 0; j < i; j++) free(matrix[j]);
+            free(matrix);
+            return nullptr;
+        }
+    }
+    return matrix;
+}
+
+//questa funzione libera nell'heap una matrice di Complex 2D
+void freeMatrix2D(Complex** matrix, int dim) {
+    if (!matrix) return;
+
+    for (int i = 0; i < dim; i++) { if (matrix[i]) free(matrix[i]); }
+    free(matrix);
+}
+
+//questa funzione libera nell'heap una matrice di Complex 3D
+void freeMatrix3D(Complex*** m, int x, int y) {
     if (!m) return;
     //libero tutta la matrice
     for (int i = 0; i < x; i++) {
@@ -357,7 +434,8 @@ inline void freeMatrix3D(Complex*** m, int x, int y) {
     free(m);
 }
 
-inline Complex*** createMatrix3D(int x, int y, int z) {
+//questa funzione alloca nell'heap una matrice di Complex 3D
+Complex*** createMatrix3D(int x, int y, int z) {
     //alloco la prima dimensione in memoria
     Complex*** m = malloc(x * sizeof(Complex**));
     if (!m) return nullptr;
@@ -404,7 +482,7 @@ inline Complex*** createMatrix3D(int x, int y, int z) {
 //questa funzione cerca un comando di inizializzazione e' all interno di una stringa ed oltre a loro chiede
 //in input l'indice con il quale inizia a cercare le due stringhe uguali.
 //appena lo trova ritorna il valore true e modifica l'indice fino al carattere subito dopo alla stringa trovata
-inline bool isPresent(const char* comparator,const char* string , int *indexInit) {
+bool isPresent(const char* comparator,const char* string , int *indexInit) {
     //dichiaro i dati dei buffer
     int indexBuffer = 0;
     char buffer[100] = "\0";
@@ -429,7 +507,24 @@ inline bool isPresent(const char* comparator,const char* string , int *indexInit
     return false;
 }
 
-inline char *deleteChar(const char *string, const char ch) {
+//questa funzione controlla se il vettore è valido o meno
+bool isVectorCorrect(const Complex * vector, const int dim) {
+    double sum = 0;
+
+    for (int i = 0; i < dim; i++) {
+        sum += pow(mod(vector[i]), 2);
+    }
+
+    //creo una epsilon che delimita l'errore massimo consentito dalla somma
+    //uso constexpr per aumentare la velocità del programma
+    constexpr double epsilon = 0.00000000000001;
+    if ( fabs(sum - 1) < epsilon) return true;
+
+    return false;
+}
+
+//elimina un determinato carattere da una stringa
+char *deleteChar(const char *string, const char ch) {
     size_t len = strlen(string);
     char *newString = malloc(len + 1); // +1 per il terminatore null
     if (!newString) return NULL; // gestione fallimento allocazione
@@ -445,7 +540,8 @@ inline char *deleteChar(const char *string, const char ch) {
     return newString;
 }
 
-inline int count_char(const char* str, char target) {
+//questa funzione conta un determinato carattere in una stringa
+int count_char(const char* str, char target) {
     int count = 0;
     //conta i caratteri interessati fin quando ci sono
     while (*str) {
@@ -453,4 +549,33 @@ inline int count_char(const char* str, char target) {
         str++;
     }
     return count;
+}
+
+//questa funzione stampa un numero complesso
+void printComplex(Complex com) {
+    printf("Re: %.4f, img: %.4f", com.real, com.img);
+}
+
+//questa funzione stampa un vettore di numeri complessi
+void printVector(const Complex* vector, const int dim) {
+    printf("(\n");
+    for (int i = 0; i<dim; i++) {
+        printf("(%d): ", i);
+        printComplex(vector[i]);
+        printf("\n");
+    }
+    printf(")\n");
+}
+
+//stampa una matrice 2D di numeri complessi
+void printMatrix(Complex **matrix, const int dim) {
+    for (int j = 0; j<dim; j++) {
+        printf("[");
+        for (int k = 0; k<dim; k++) {
+            if (k != 0) printf(" || ");
+            printf("(%d)-(%d) ", j, k);
+            printComplex(matrix[j][k]);
+        }
+        printf(" ]\n");
+    }
 }

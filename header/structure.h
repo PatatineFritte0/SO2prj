@@ -13,8 +13,8 @@ typedef struct{
 //----------------------------OPERATION PROTOTYPE FUNCTION WITH STRUCT DATA---------------------------------
 //----------------------------------------------------------------------------------------------------------
 
-inline Complex add(const Complex*, const Complex*);
-inline Complex mul(const Complex*, const Complex*);
-inline double mod(const Complex);
+Complex add(const Complex*, const Complex*);
+Complex mul(const Complex*, const Complex*);
+double mod(const Complex);
 
 #endif //STRUCTURE_H
