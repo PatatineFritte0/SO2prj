@@ -35,12 +35,12 @@ Solo la **prima definizione valida con nome corretto e matrice valida** sarà co
 
 Gli elementi segnati con `*` saranno quelli presi in considerazione.
 
-- Nel file `circ` è possibile dare nomi personalizzati alle matrici, es. `pippo` (senza virgolette).
+- Nel file `circ` è possibile dare nomi personalizzati alle matrici, es. `pippo`.
 - Il numero massimo di caratteri per i nomi e il numero di matrici è 64.  
   Può essere modificato cambiando il valore `MAX_MATRIX_NAME` nel file `header/costants.h`.
 - Il **primo comando `circ` valido** definisce quali matrici sono necessarie. Se una manca, il programma termina (errore gestito).
 - Il comando `init` deve avere **subito dopo** la definizione di un vettore.  
-  ⚠️ Attenzione: nei vettori, invece dei caratteri `(` e `)` usare **`\[` e `\]`**
+  ⚠️ Attenzione: nei vettori, invece dei caratteri `(` e `)` usare **`[` e `]`**
 - Il comando `define` deve avere subito dopo **il nome della matrice**, seguito dalla definizione della matrice.
 
 ---
@@ -87,14 +87,14 @@ Si può inserire un'espressione o un dato singolo. L'espressione deve essere **a
 
 ### Matrici
 
-- Inizio con `\[`, definire vettori validi in sequenza.
-- Terminare con `\]`.
+- Inizio con `[`, definire vettori validi in sequenza.
+- Terminare con `]`.
 
 **Esempio:**
 
 ```
-\[
+[
 (1, 0),
 (0, 1)
-\]
+]
 ```
