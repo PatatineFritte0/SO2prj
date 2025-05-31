@@ -14,8 +14,8 @@ int main() {
     char *init = readFile("../data/init.txt");
 
     if (circ != NULL && init != NULL) {
-        printf("%s\n", circ);
-        printf("%s\n", init);
+        //printf("%s\n", circ);
+        //printf("%s\n", init);
 
         //ottengo i qubits
         const int nQubit = getNqbit(init);
@@ -79,26 +79,28 @@ int main() {
                         printMatrix(mulMatrix, dim);
 
                         printf("\nMOLTIPLICAZIONE TRA LA MATRICE MOLTIPLICATA CON IL VETTORE INIT\n");
+                        //moltiplico il risultato della moltiplicazione per il vettore init
                         Complex* result = mulMatrixByVector(mulMatrix, initVector, dim);
                         printVector(result, dim);
 
                         printf("\nCONTROLLO SULLA CORRETTEZZA: ");
 
+                        //controllo se il risultato sia corretto o meno
                         if (isVectorCorrect(result, dim)) {
                             printf("CORRETTO");
                         }
-                        else { printf("NON CORRETTO"); }
+                        else { fprintf(stderr, "NON CORRETTO"); }
 
                         freeMatrix2D(mulMatrix, dim);
                         free(result);
-                    }else { printf("ERRORE NELLA DICHIARAZIONE DELLE MATRCICI DI CIRCUITO\n"); }
+                    }else { fprintf(stderr ,"ERRORE NELLA DICHIARAZIONE DELLE MATRCICI DI CIRCUITO\n"); }
                     freeMatrix3D(circuit, nMatrix, dim);
-                }else { printf("ERRORE NELLA DICHIARAZIONE NOMI CIRCUITI\n"); }
-            }else { printf("I DATI INIT NON SONO VALIDI O NON PRESENTI NEL FILE\n"); }
+                }else { fprintf(stderr, "ERRORE NELLA DICHIARAZIONE NOMI CIRCUITI\n"); }
+            }else { fprintf(stderr, "I DATI INIT NON SONO VALIDI O NON PRESENTI NEL FILE\n"); }
             free(initVector);
-        }else { printf("I QUBITS NON SONO VALIDI O NON PRESENTI NEL FILE\n"); }
+        }else { fprintf(stderr, "I QUBITS NON SONO VALIDI O NON PRESENTI NEL FILE\n"); }
     }else {
-        printf("ERRORE LETTURA FILE\n");
+        fprintf(stderr, "ERRORE LETTURA FILE\n");
     }
 
     return 0;

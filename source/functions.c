@@ -194,11 +194,16 @@ Complex stringToComplex(const char* string) {
             free(clearImg);
         } else {
             char* clearReal = deleteChar(real, 'i');
-            result.real = atof(imag);
+            //ho i, ma non il coefficente
+            if ( strcmp(clearReal, "-") == 0 || strcmp(clearReal, "+") == 0 ) {
+                insert_char(clearReal, '1', 1);
+            }
+
             result.img = atof(clearReal);
+            result.real = atof(imag);
             free(clearReal);
         }
-    } else { //significa che la parte reale non c'e' e
+    } else { //significa che la parte reale non c'e'
              //la 'i' aveva un coefficiente
         result.img = atof(input);
     }
@@ -578,4 +583,18 @@ void printMatrix(Complex **matrix, const int dim) {
         }
         printf(" ]\n");
     }
+}
+
+//questa funzione shifta tutta la stringa a partire da una posizione
+//e inserisce il carattere in quella posizione
+void insert_char(char *str, const char c, const int pos) {
+    const int len = strlen(str);
+
+    // Shift verso destra i caratteri, incluso il terminatore '\0'
+    for (int i = len; i >= pos; i--) {
+        str[i + 1] = str[i];
+    }
+
+    // Inserisci il carattere
+    str[pos] = c;
 }

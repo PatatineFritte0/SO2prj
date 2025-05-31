@@ -1,9 +1,9 @@
 
 #circ
 //valido
-#define X [(0, 1) (1, 0)]
+#define pippo [(0, 1) (1, 0)]
 //valido
-#circ Y X I
+#circ Y pippo I
 #circ X Y
 
 #define I [(1, 0) (0, 1)]
