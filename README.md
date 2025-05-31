@@ -1,53 +1,100 @@
-Projetto "Simulazione Circuito Quantistico"
-Autore: Simone Comignani
+# Progetto "Simulazione Circuito Quantistico"
 
-Il progetto è stato fatto in modo tale che i file siano il più flessibile possibile, 
-ma comunque ci sono dei vincoli da rispettare per far si che tutto funzioni correttamente.
+**Autore:** Simone Comignani
 
-1) nei file l'inizio di un comando è '#' e subito dopo il nome "qubits"/"define"/"circ"/"init"
-   regole varie dei comandi:
-- è possibile inserire lo stesso comando più volte e dove si vuole nel file, si prendera in considerazione il primo
-  comando scritto in maniera valida partendo dall'inizio del file
-  CASO PARTICOLARE:
-  il comando #define ovviamente deve essere preso più volte, quindi solo la prima con il nome giusto con matrice valida
-  verrà preso in considerazione.
-  esempio: se avessimo un circ del genere
+Il progetto è stato fatto in modo tale che i file siano il più flessibili possibile,  
+ma comunque ci sono dei vincoli da rispettare per far sì che tutto funzioni correttamente.
 
-  #circ X Y *
-  #circ X Y I
-  #define Y (matrice non valida)
-  #define Y (matrice valida) *
-  #define X (matrice valida) *
-  #define X (matrice valida)
-  #define I (matrice valida)
+---
 
-  quelli con accanto '*' saranno quelli presi in considerazione
-- nel file circ è possibile dare dei nomi alle matrici come per esempio "pippo" (il nome può non avere le virgolette)
-  il numero di caratteri nel nome come il numero di matrici massime inseribili al momento ha un massimo di 64, tuttavia però
-  è facilmente modificabile se si apre il file costants.h in header e si modifica il MAX_MATRIX_NAME.
-- il primo comando circ valido che trova detterà quali matrici prendere dal file, se una di queste matrici manca il programma
-  terminerà con un errore (gestito)
-- il comando init deve avere subito dopo la definizione di un vettore
-  attenzione: i vettori invece dei caratteri ( e ) bisogna usare \[ e \]
-- il comando define deve avere subito dopo il nome della matrice e dopo la definizione di una matrice
-  
-2) i numeri complessi devono avere una sintassi matematica completa.
-- COME DEFINIRE UN NUMERO COMPLESSO: si può inserire un espressione o un dato singolo, l'espressione deve
-  rispettare la sintassi matematica e deve essere un informazione atomica.
-  esempi:
-  - i (si)
-  - 1 (si)
-  - 1+1 (no)
-  - 4+i (si)
-  - 4i (si)
-  - 4ii (no)
-  - 4+4i (si)
-  - 4i+1 (si)
-  - 4i++1 (no)
-  - i4-1 (si)
-  - 4(1+i) (no)
-- COME DEFINIRE UN VETTORE: inizio definizione del vettore si preannuncia con il carattere '(',  è possibile inserire degli spazi tra un
-  dato e l'altro, inserire i numeri complessi divisi da ',', quando si ha terminato di inserire i numeri si chiude con ')'.
-  Attenzione, se si va a capo il programma non valutera' valido il dato
-- COME DEFINIRE UNA MATRICE: inizio definizione della matrice si preannuncia con il carattere '\[', dopodichè si devono
-  definire i vettori uno dopo l'altro secondo le loro regole e infine chiudere con il carattere '\]"
+## 1. Comandi e Struttura dei File
+
+Nei file, l'inizio di un comando è `#` seguito dal nome: `"qubits"`, `"define"`, `"circ"`, `"init"`.
+
+### Regole varie dei comandi:
+
+- È possibile inserire lo stesso comando più volte e ovunque nel file.  
+  Si prenderà in considerazione **solo il primo comando valido** a partire dall'inizio del file.
+
+#### **Caso particolare – `#define`:**
+
+Il comando `#define` può e deve essere usato più volte.  
+Solo la **prima definizione valida con nome corretto e matrice valida** sarà considerata.
+
+**Esempio:**
+
+```
+#circ X Y *  
+#circ X Y I  
+#define Y (matrice non valida)  
+#define Y (matrice valida) *  
+#define X (matrice valida) *  
+#define X (matrice valida)  
+#define I (matrice valida)
+```
+
+Gli elementi segnati con `*` saranno quelli presi in considerazione.
+
+- Nel file `circ` è possibile dare nomi personalizzati alle matrici, es. `pippo` (senza virgolette).
+- Il numero massimo di caratteri per i nomi e il numero di matrici è 64.  
+  Può essere modificato cambiando il valore `MAX_MATRIX_NAME` nel file `header/costants.h`.
+- Il **primo comando `circ` valido** definisce quali matrici sono necessarie. Se una manca, il programma termina (errore gestito).
+- Il comando `init` deve avere **subito dopo** la definizione di un vettore.  
+  ⚠️ Attenzione: nei vettori, invece dei caratteri `(` e `)` usare **`\[` e `\]`**
+- Il comando `define` deve avere subito dopo **il nome della matrice**, seguito dalla definizione della matrice.
+
+---
+
+## 2. Numeri Complessi
+
+I numeri complessi devono avere una sintassi matematica **completa**.
+
+### Come definire un numero complesso
+
+Si può inserire un'espressione o un dato singolo. L'espressione deve essere **atomica** (cioè senza parentesi annidate o operazioni non supportate).
+
+**Esempi validi e non:**
+
+| Espressione | Valida? |
+|-------------|---------|
+| `i`         | ✅       |
+| `1`         | ✅       |
+| `1+1`       | ❌       |
+| `4+i`       | ✅       |
+| `4i`        | ✅       |
+| `4ii`       | ❌       |
+| `4+4i`      | ✅       |
+| `4i+1`      | ✅       |
+| `4i++1`     | ❌       |
+| `i4-1`      | ✅       |
+| `4(1+i)`    | ❌       |
+
+---
+
+## 3. Definizione di Vettori e Matrici
+
+### Vettori
+
+- Inizio con `(`, separati da virgole, spazi ammessi.
+- Devono rimanere **su una singola riga**, altrimenti non saranno validi.
+- Terminare con `)`.
+
+**Esempio:**
+
+```
+(1, i, 2+3i)
+```
+
+### Matrici
+
+- Inizio con `\[`, definire vettori validi in sequenza.
+- Terminare con `\]`.
+
+**Esempio:**
+
+```
+\[
+(1, 0),
+(0, 1)
+\]
+```
