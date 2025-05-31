@@ -1,6 +1,8 @@
 #ifndef FUNCTION_H
 #define FUNCTION_H
 
+#include <stdbool.h>
+
 #include "costants.h"
 #include "structure.h"
 

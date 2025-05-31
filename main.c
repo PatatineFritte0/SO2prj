@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 
 #include "header/structure.h"
 #include "header/costants.h"
@@ -10,8 +11,8 @@
 
 int main() {
     //cerco i file nella directory del programma
-    char *circ = readFile("../data/circ.txt");
-    char *init = readFile("../data/init.txt");
+    char *circ = readFile("./data/circ.txt");
+    char *init = readFile("./data/init.txt");
 
     if (circ != NULL && init != NULL) {
         //printf("%s\n", circ);
@@ -87,9 +88,9 @@ int main() {
 
                         //controllo se il risultato sia corretto o meno
                         if (isVectorCorrect(result, dim)) {
-                            printf("CORRETTO");
+                            printf("CORRETTO\n");
                         }
-                        else { fprintf(stderr, "NON CORRETTO"); }
+                        else { fprintf(stderr, "NON CORRETTO\n"); }
 
                         freeMatrix2D(mulMatrix, dim);
                         free(result);

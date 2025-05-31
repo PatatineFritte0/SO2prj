@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <tgmath.h>
+#include <stdbool.h>
 
 #include "../header/functions.h"
 
@@ -252,7 +253,7 @@ bool getOrderMatrix(const char* circ, char order[MAX_MATRIX][MAX_NAME_MATRIX]){
 Complex*** getMatrix(const int dimention, const char* circ, const int nMatrix , char order[MAX_MATRIX][MAX_NAME_MATRIX]) {
     //inizializzo la matrice di ritorno
     Complex*** orderMatrix = createMatrix3D(nMatrix,dimention,dimention);
-    if (!orderMatrix) return nullptr;
+    if (!orderMatrix) return NULL;
 
     int indexOrder = 0, indexCirc = 0;
     //per ogni define trovato fin quando non eccedo il numero di matrici che mi interessano
@@ -351,7 +352,7 @@ Complex*** getMatrix(const int dimention, const char* circ, const int nMatrix , 
     if (indexOrder != nMatrix) {
         //libero la memoria
         freeMatrix3D(orderMatrix, nMatrix, dimention);
-        return nullptr;
+        return NULL;
     }
 
     return orderMatrix;
@@ -385,7 +386,7 @@ Complex** matrixMoltiplication(Complex** complex1, Complex** complex2, const int
 Complex* mulMatrixByVector(Complex** matrix, const Complex* vector, const int dim) {
     Complex* ris = malloc(dim * sizeof(Complex));
     if (!ris) {
-        return nullptr;
+        return NULL;
     }
 
     //moltiplico una matrice per un vettore secondo le regole dell'algebra base
@@ -405,13 +406,13 @@ Complex* mulMatrixByVector(Complex** matrix, const Complex* vector, const int di
 Complex** createMatrix2D(int x, int y) {
     Complex** matrix = malloc(x * sizeof(Complex*));
 
-    if (!matrix) return nullptr;
+    if (!matrix) return NULL;
     for (int i = 0; i<x; i++) {
         matrix[i] = malloc(y * sizeof(Complex));
         if (!matrix[i]) {
             for (int j = 0; j < i; j++) free(matrix[j]);
             free(matrix);
-            return nullptr;
+            return NULL;
         }
     }
     return matrix;
@@ -443,7 +444,7 @@ void freeMatrix3D(Complex*** m, int x, int y) {
 Complex*** createMatrix3D(int x, int y, int z) {
     //alloco la prima dimensione in memoria
     Complex*** m = malloc(x * sizeof(Complex**));
-    if (!m) return nullptr;
+    if (!m) return NULL;
 
     for (int i = 0; i < x; i++) {
         //per ogni prima dimensione alloco la seconda dimensione
@@ -452,7 +453,7 @@ Complex*** createMatrix3D(int x, int y, int z) {
             // libero quello allocato fino ad ora
             for (int i2 = 0; i2 < i; i2++) free(m[i2]);
             free(m);
-            return nullptr;
+            return NULL;
         }
 
         for (int j = 0; j < y; j++) {
@@ -467,7 +468,7 @@ Complex*** createMatrix3D(int x, int y, int z) {
                     free(m[ii]);
                 }
                 free(m);
-                return nullptr;
+                return NULL;
             }
             //una volta creata la 3 dimensione la inizializzo
             for (int k = 0; k < z; k++) {
@@ -522,7 +523,7 @@ bool isVectorCorrect(const Complex * vector, const int dim) {
 
     //creo una epsilon che delimita l'errore massimo consentito dalla somma
     //uso constexpr per aumentare la velocità del programma
-    constexpr double epsilon = 0.00000000000001;
+    const double epsilon = 0.00000000000001;
     if ( fabs(sum - 1) < epsilon) return true;
 
     return false;
@@ -536,7 +537,7 @@ char *deleteChar(const char *string, const char ch) {
 
     int j = 0;
     //copio la stringa tranne quel carattere
-    for (int i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         if (string[i] != ch) {
             newString[j++] = string[i];
         }
@@ -588,7 +589,7 @@ void printMatrix(Complex **matrix, const int dim) {
 //questa funzione shifta tutta la stringa a partire da una posizione
 //e inserisce il carattere in quella posizione
 void insert_char(char *str, const char c, const int pos) {
-    const int len = strlen(str);
+    const size_t len = strlen(str);
 
     // Shift verso destra i caratteri, incluso il terminatore '\0'
     for (int i = len; i >= pos; i--) {
