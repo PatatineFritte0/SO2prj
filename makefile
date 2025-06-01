@@ -1,28 +1,39 @@
-# Nome dell'eseguibile
-TARGET = main
-
-# Compilatore
+# Compilatore da usare
 CC = gcc
 
-# Flag di compilazione
-CFLAGS = -Wall -Wextra -Iheader
+# Flag per la compilazione:
+# -Iheader: indica dove trovare i file .h
+# -Wall: attiva tutti gli avvisi (warning)
+CFLAGS = -Iheader -Wall
 
-# File sorgenti
-SRCS = $(wildcard source/*.c) main.c
+# Prende tutti i file .c nella cartella source/
+SRC = $(wildcard source/*.c)
 
-# Oggetti compilati
-OBJS = $(SRCS:.c=.o)
+# Converte i .c in .o (file oggetto)
+OBJ = $(SRC:.c=.o)
 
-# Regola principale
-all: $(TARGET)
+# Nome dell'eseguibile finale
+TARGET = main_exec
 
-# Come costruire l'eseguibile
-$(TARGET): $(OBJS)
-	$(CC) $(OBJS) -o $@ -lm
+# Obiettivo principale: compila, esegue e pulisce
+all: $(TARGET) run clean
 
-# Regola per pulire i file oggetto e l'eseguibile
+# Compila l'eseguibile finale
+# Usa main.c e tutti i file oggetto generati da source/*.c
+$(TARGET): main.c $(OBJ)
+	$(CC) $(CFLAGS) -o $(TARGET) main.c $(OBJ)
+
+# Regola generica per compilare ogni .c in .o
+# $< → file sorgente (.c)
+# $@ → file oggetto (.o)
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Esegue il programma appena compilato
+run:
+	@echo "Esecuzione del programma:"
+	@./$(TARGET)
+
+# Rimuove tutti i file oggetto e l'eseguibile
 clean:
-	rm -f $(OBJS) $(TARGET)
-
-# Per evitare che make cerchi un file chiamato 'clean'
-.PHONY: all clean
+	rm -f $(OBJ) $(TARGET)
