@@ -21,7 +21,7 @@ all: $(TARGET) run clean
 # Compila l'eseguibile finale
 # Usa main.c e tutti i file oggetto generati da source/*.c
 $(TARGET): main.c $(OBJ)
-	$(CC) $(CFLAGS) -o $(TARGET) main.c $(OBJ)
+	$(CC) $(CFLAGS) -o $(TARGET) main.c $(OBJ) -lm
 
 # Regola generica per compilare ogni .c in .o
 # $< → file sorgente (.c)
