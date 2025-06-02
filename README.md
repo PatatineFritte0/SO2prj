@@ -88,15 +88,14 @@ Si può inserire un'espressione o un dato singolo. L'espressione deve essere **a
 ### Matrici
 
 - Inizio con `[`, definire vettori validi in sequenza.
+- Devono rimanere **su una singola riga**, altrimenti non saranno validi.
 - Terminare con `]`.
 
 **Esempio:**
 
 ```
-[
-(1, 0),
-(0, 1)
-]
+[ (1, 0), (0, 1) ]
+
 ```
 
 ---
