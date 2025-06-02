@@ -3,11 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <stdbool.h>
 
+#include "dataRecovery.h"
+#include "fileManagement.h"
+#include "matrixOperation.h"
+#include "utils.h"
 #include "header/structure.h"
 #include "header/costants.h"
-#include "header/functions.h"
 
 int main() {
     //cerco i file nella directory del programma
