@@ -95,7 +95,6 @@ Si può inserire un'espressione o un dato singolo. L'espressione deve essere **a
 
 ```
 [ (1, 0), (0, 1) ]
-
 ```
 
 ---
@@ -106,21 +105,27 @@ La struttura del progetto è organizzata in più cartelle per separare i file di
 
 <pre>
 .
-├── data/              # Contiene i file di input
-│   ├── init           # Vettore di inizializzazione
-│   └── circ           # Descrizione del circuito e delle matrici
+├── data/                  # Contiene i file di input
+│   ├── init               # Vettore di inizializzazione
+│   └── circ               # Descrizione del circuito e delle matrici
 │
-├── source/            # Codice sorgente in C
-│   ├── function.c     # Tutte le funzioni generali utilizzate nel progetto
-│   └── structure.c    # Funzioni relative alla struttura `Complex`
+├── source/                # Codice sorgente in C
+│   ├── dataRecovery.c     # Funzioni per il recupero dati dalle stringe
+|   ├── fileManagement.c   # Funzioni per la gestione dei file
+|   ├── matrixOperation.c  # Funzioni per le operazione tra matrici (anche per dichiararle)
+|   ├── utils.c            # Funzioni utili per la pulizia del codice e debugging
+│   └── structure.c        # Funzioni relative alla struttura `Complex`
 │
-├── header/            # File header
-│   ├── function.h     # Prototipi delle funzioni definite in function.c
-│   ├── structure.h    # Prototipi e definizione della struttura `Complex`
-│   └── costants.h     # Costanti utilizzate nel progetto, definite con `#define`
+├── header/                # File header
+│   ├── dataRecovery.h     # prototipi per le funzioni per il recupero dati dalle stringe
+|   ├── fileManagement.h   # prototipi per le funzioni per la gestione dei file
+|   ├── matrixOperation.h  # Funzioni per le operazione tra matrici (anche per dichiararle)
+|   ├── utils.h            # prototipi per le funzioni utili per la pulizia del codice e debugging
+│   ├── structure.h        # Prototipi e definizione della struttura `Complex`
+│   └── costants.h         # Costanti utilizzate nel progetto, definite con `#define`
 │
-├── main.c             # Entry point del programma
-├── Makefile           # Per compilare il progetto
+├── main.c                 # Entry point del programma
+├── Makefile               # Per compilare il progetto
 </pre>
 
 ### Indicazioni
