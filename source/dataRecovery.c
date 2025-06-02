@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../header/utils.h";
+#include "../header/utils.h"
 #include "../header/matrixOperation.h"
 
 //questa funzione ottiene il numero di qubits se sono presenti in init
