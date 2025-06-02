@@ -99,6 +99,8 @@ Si può inserire un'espressione o un dato singolo. L'espressione deve essere **a
 ]
 ```
 
+---
+
 ## 4. Struttura del Progetto
 
 La struttura del progetto è organizzata in più cartelle per separare i file di input, il codice sorgente e gli header:
@@ -122,7 +124,7 @@ La struttura del progetto è organizzata in più cartelle per separare i file di
 ├── Makefile           # Per compilare il progetto
 </pre>
 
-### ✅ Indicazioni
+### Indicazioni
 
 - I file `init` e `circ` **devono essere posizionati nella cartella `data/`** per poter essere letti correttamente dal programma.
 - Il progetto è pensato per essere compilato con il `Makefile` presente nella root del progetto.  
