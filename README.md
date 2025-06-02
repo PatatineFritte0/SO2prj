@@ -98,3 +98,33 @@ Si può inserire un'espressione o un dato singolo. L'espressione deve essere **a
 (0, 1)
 ]
 ```
+
+## 4. Struttura del Progetto
+
+La struttura del progetto è organizzata in più cartelle per separare i file di input, il codice sorgente e gli header:
+
+<pre>
+.
+├── data/              # Contiene i file di input
+│   ├── init           # Vettore di inizializzazione
+│   └── circ           # Descrizione del circuito e delle matrici
+│
+├── source/            # Codice sorgente in C
+│   ├── function.c     # Tutte le funzioni generali utilizzate nel progetto
+│   └── structure.c    # Funzioni relative alla struttura `Complex`
+│
+├── header/            # File header
+│   ├── function.h     # Prototipi delle funzioni definite in function.c
+│   ├── structure.h    # Prototipi e definizione della struttura `Complex`
+│   └── costants.h     # Costanti utilizzate nel progetto, definite con `#define`
+│
+├── main.c             # Entry point del programma
+├── Makefile           # Per compilare il progetto
+</pre>
+
+### ✅ Indicazioni
+
+- I file `init` e `circ` **devono essere posizionati nella cartella `data/`** per poter essere letti correttamente dal programma.
+- Il progetto è pensato per essere compilato con il `Makefile` presente nella root del progetto.  
+  Basta eseguire `make` da terminale per generare l'eseguibile, eseguirlo e pulire tutto.
+- I percorsi sono gestiti nel codice in modo da fare riferimento a `data/init` e `data/circ` **relativamente alla root del progetto**.
