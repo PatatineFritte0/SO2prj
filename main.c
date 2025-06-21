@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 
 #include "dataRecovery.h"
 #include "fileManagement.h"
@@ -11,10 +12,46 @@
 #include "header/structure.h"
 #include "header/costants.h"
 
+
+//è possibile migliorare il debug decommentando le linee di codice di print
+
+
 int main() {
+
+    char initFile[MAX_CHARACTER_INPUT];
+    char circFile[MAX_CHARACTER_INPUT];
+
+    printf(" I DATI DEVONO ESSERE NELLA CARTELLA \"DATA\"\n\n");
+
+    printf(" Fornire il nome del file circ: ");
+    scanf("%1024s", circFile);
+
+    printf("Fornire il nome del file init: ");
+    scanf("%1024s", initFile);
+
+    // Calcolo la lunghezza necessaria per i path completi
+    size_t allocationSize = strlen(INITIAL_FOLDER) + MAX_CHARACTER_INPUT + 1; // +1 per '\0'
+
+    // Alloco e costruisco i path
+    char *initPath = malloc(allocationSize);
+    char *circPath = malloc(allocationSize);
+
+    if (!initPath || !circPath) {
+        fprintf(stderr, "Errore di allocazione\n");
+        free(initPath);
+        free(circPath);
+        return 1;
+    }
+
+    strcpy(initPath, INITIAL_FOLDER);
+    strcat(initPath, initFile);
+
+    strcpy(circPath, INITIAL_FOLDER);
+    strcat(circPath, circFile);
+
     //cerco i file nella directory del programma
-    char *circ = readFile("./data/circ.txt");
-    char *init = readFile("./data/init.txt");
+    char *circ = readFile(circPath);
+    char *init = readFile(initPath);
 
     if (circ != NULL && init != NULL) {
         //printf("%s\n", circ);
@@ -34,9 +71,9 @@ int main() {
 
             //controllo se esiste il vettore init e setto il valore in initVector
             if (getInitVector(init, initVector, dim)) {
-                printf("VETTORE INIT:\n");
-                printVector(initVector, dim);
-                printf("\n");
+                //printf("VETTORE INIT:\n");
+                //printVector(initVector, dim);
+                //printf("\n");
 
                 //inizializzo order imponendo un massimo di
                 //matrici che puoi dichiarare con il nome annesso
@@ -57,10 +94,12 @@ int main() {
                     Complex*** circuit = getMatrix(dim, circ, nMatrix, order);
                     if (circuit != NULL) {
 
+                        /*
                         for (int i = nMatrix-1; i>=0; i--) {
                             printf("MATRICE : %s\n", order[i]);
                             printMatrix(circuit[i], dim);
                         }
+                        */
 
                         //inizializzo una matrice identita'
                         //essenziale per la moltiplicazione
@@ -78,8 +117,8 @@ int main() {
                             mulMatrix = temp;
                         }
 
-                        printf("MOLTIPLICAZIONE TRA MATRICI:\n");
-                        printMatrix(mulMatrix, dim);
+                        //printf("MOLTIPLICAZIONE TRA MATRICI:\n");
+                        //printMatrix(mulMatrix, dim);
 
                         printf("\nMOLTIPLICAZIONE TRA LA MATRICE MOLTIPLICATA CON IL VETTORE INIT\n");
                         //moltiplico il risultato della moltiplicazione per il vettore init
@@ -106,6 +145,8 @@ int main() {
         fprintf(stderr, "ERRORE LETTURA FILE\n");
     }
 
+    free(circPath);
+    free(initPath);
     return 0;
 }
 

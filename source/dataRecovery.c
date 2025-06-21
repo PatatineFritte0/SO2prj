@@ -1,6 +1,7 @@
 #include "../header/dataRecovery.h"
 
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -62,9 +63,10 @@ bool getInitVector(char* init, Complex* vector, int dimention) {
                         vector[nFindNumbers] = (Complex){0,0};
                         vector[nFindNumbers++] = stringToComplex(buffer);
                         //vector[nFindNumbers] = stringToComplex("-5");
-                        //printf("Re: %.4f, img: %.4f \n", vector[nFindNumbers].real, vector[nFindNumbers].img);
+
                         //printf("%s\n", buffer);
-                        //nFindNumbers++;
+                        //printf("Re: %.4f, img: %.4f \n", vector[nFindNumbers].real, vector[nFindNumbers].img);
+
                     } else {
                         // c'e un errore di sintassi
                         buffer[0] = '\0';
@@ -231,8 +233,9 @@ Complex*** getMatrix(const int dimention, const char* circ, const int nMatrix , 
         if (strcmp(order[indexOrder], bufferName) == 0) {
             //booleana che mi controlla se i dati sono validi
             bool isValid = true;
-            while (circ[indexCirc] == ' ' || circ[indexCirc] == '\t') { indexCirc++; }
+            while (circ[indexCirc] == ' ' || circ[indexCirc] == '\t' || circ[indexCirc] == '\n') { indexCirc++; }
             //controllo se inizia una marice
+
             if (circ[indexCirc++] == '[') {
                 //inizializzo un buffer per le operazioni
                 char bufferOperation[MAX_NAME_MATRIX] = {0};
@@ -242,15 +245,19 @@ Complex*** getMatrix(const int dimention, const char* circ, const int nMatrix , 
 
                 //fin quando la matrice non si chiude
                 while (circ[indexCirc] != ']' && isValid) {
+                    if (circ[indexCirc] == ')') indexCirc++;
                     //inizializzo per ogni ')' le colonne a 0
                     column = 0;
-                    while (circ[indexCirc] == ' ' || circ[indexCirc] == '\t') { indexCirc++; }
+                    while (circ[indexCirc] == ' ' || circ[indexCirc] == '\t' || circ[indexCirc] == '\n') { indexCirc++; }
 
                     //se inizia la riga
                     if (circ[indexCirc] == '(') {
                         //fin quando non finisce la riga
                         while (circ[indexCirc] != ')' && isValid) {
                             indexCirc++;
+
+                            while (circ[indexCirc] == ' ' || circ[indexCirc] == '\t' || circ[indexCirc] == '\n') { indexCirc++; }
+
                             //controllo se i caratteri sono legali per l'inserimaneto in matrice
                             if (circ[indexCirc] == '+' || circ[indexCirc] == '-' || circ[indexCirc] == 'i' || circ[indexCirc] == '.' || isdigit(circ[indexCirc])) {
                                 bufferOperation[indexOperationBuffer++] = circ[indexCirc];
@@ -275,18 +282,20 @@ Complex*** getMatrix(const int dimention, const char* circ, const int nMatrix , 
                                     //controlli che le dimensioni siano rispettate
                                     if (dimention != column) isValid = false;
                                 }
-                            }else if (circ[indexCirc] == ' ' || circ[indexCirc] == '\t') {
-                                //ignori
                             }else {
                                 //dato non valido
                                 isValid = false;
                                 break;
                             }
                         }
+
                         indexCirc++;
 
+                    }else if (circ[indexCirc] == ']') {
+                        row--; //è una pezza, spero non si noti
                     }else {
                         //dato non valido
+                        printf("\n%c\n", circ[indexCirc]);
                         isValid = false;
                         break;
                     }
