@@ -10,8 +10,8 @@ ma comunque ci sono dei vincoli da rispettare per far sì che tutto funzioni cor
 ## 1. Comandi e Struttura dei File
 
 Nei file, l'inizio di un comando è `#` seguito dal nome: `"qubits"`, `"define"`, `"circ"`, `"init"`.
-Nel file init devono essere presenti `"init:` e `"qubits"`.
-Nel file circ devono essere presenti `"circ"` e `"define"`
+- Nel file init devono essere presenti `"init:` e `"qubits"`.
+- Nel file circ devono essere presenti `"circ"` e `"define"`. 
 
 ### Regole varie dei comandi:
 
