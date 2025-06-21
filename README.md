@@ -10,6 +10,8 @@ ma comunque ci sono dei vincoli da rispettare per far sì che tutto funzioni cor
 ## 1. Comandi e Struttura dei File
 
 Nei file, l'inizio di un comando è `#` seguito dal nome: `"qubits"`, `"define"`, `"circ"`, `"init"`.
+Nel file init devono essere presenti `"init:` e `"qubits"`.
+Nel file circ devono essere presenti `"circ"` e `"define"`
 
 ### Regole varie dei comandi:
 
@@ -57,17 +59,17 @@ Si può inserire un'espressione o un dato singolo. L'espressione deve essere **a
 
 | Espressione | Valida? |
 |-------------|---------|
-| `i`         | ✅       |
-| `1`         | ✅       |
-| `1+1`       | ❌       |
-| `4+i`       | ✅       |
-| `4i`        | ✅       |
-| `4ii`       | ❌       |
-| `4+4i`      | ✅       |
-| `4i+1`      | ✅       |
-| `4i++1`     | ❌       |
-| `i4-1`      | ✅       |
-| `4(1+i)`    | ❌       |
+| `i`         | ✅     |
+| `1`         | ✅     |
+| `1+1`       | ❌     |
+| `4+i`       | ✅     |
+| `4i`        | ✅     |
+| `4ii`       | ❌     |
+| `4+4i`      | ✅     |
+| `4i+1`      | ✅     |
+| `4i++1`     | ❌     |
+| `i4-1`      | ✅     |
+| `4(1+i)`    | ❌     |
 
 ---
 
@@ -130,7 +132,7 @@ La struttura del progetto è organizzata in più cartelle per separare i file di
 
 ### Indicazioni
 
-- I file `init` e `circ` **devono essere posizionati nella cartella `data/`** per poter essere letti correttamente dal programma.
+- I file di input **devono essere posizionati nella cartella `data/`** per poter essere letti correttamente dal programma.
 - Il progetto è pensato per essere compilato con il `Makefile` presente nella root del progetto.  
   Basta eseguire `make` da terminale per generare l'eseguibile, eseguirlo e pulire tutto.
 - I percorsi sono gestiti nel codice in modo da fare riferimento a `data/init` e `data/circ` **relativamente alla root del progetto**.
