@@ -101,7 +101,22 @@ Si può inserire un'espressione o un dato singolo. L'espressione deve essere **a
 
 ---
 
-## 4. Struttura del Progetto
+## 4. Gestione del Numero di Thread
+
+Durante l'esecuzione, il programma richiede all’utente di inserire **il numero di thread da utilizzare** per l’elaborazione parallela.
+
+Se l'utente inserisce un numero **minore di 1**, il programma imposta automaticamente il numero di thread a **1** per garantire il corretto funzionamento.
+
+**Esempio di comportamento:**
+
+Scegliere il numero di thread da usare: -2 || 
+(Valore non valido. Impostato automaticamente a 1 thread)
+
+Questo garantisce che venga sempre utilizzato almeno un thread attivo, evitando errori o condizioni di stallo.
+
+---
+
+## 5. Struttura del Progetto
 
 La struttura del progetto è organizzata in più cartelle per separare i file di input, il codice sorgente e gli header:
 
