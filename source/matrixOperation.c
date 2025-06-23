@@ -2,6 +2,35 @@
 
 #include <stdlib.h>
 
+//questa funzione prende in input una struttura e tramite quella riesce a moltiplicare
+//matrici in sequenza dato un vettore di matrici
+//in output da una matrice risultante
+void *mulMatrixThreadFunction(void *args) {
+    //ottengo i paramentri in input
+    struct argThreadMatrMoltiplication arg = *((struct argThreadMatrMoltiplication *) args);
+    int indexInit = arg.indexInit;
+    int dim = arg.dimMatrix;
+    int competence = arg.competence;
+    Complex*** circuit = arg.matrix;
+
+    //creo una matrice identita'
+    Complex **risMul = createMatrix2D(dim, dim);
+    for (int i = 0; i<dim; i++) {
+        for (int j = 0; j<dim; j++) {
+            risMul[i][j] = ( i == j )? (Complex){1,0} : (Complex){0,0};
+        }
+    }
+
+    //faccio la moltiplicazione da n+k-1 a n
+    for (int i = indexInit + competence - 1; i>=indexInit; i--) {
+        Complex** temp = matrixMoltiplication(risMul, circuit[i], dim);
+        freeMatrix2D(risMul, dim);
+        risMul = temp;
+    }
+
+    return (void *)risMul;
+}
+
 //questa funzione si occupa di fare la moltiplicazione tra matrici
 Complex** matrixMoltiplication(Complex** complex1, Complex** complex2, const int dim) {
     Complex** ris = createMatrix2D(dim, dim);
@@ -118,4 +147,12 @@ Complex*** createMatrix3D(int x, int y, int z) {
     }
 
     return m;
+}
+
+void copyMatrix(Complex** m1, Complex** m2, int row, int col) {
+    for (int i = 0; i<row; i++) {
+        for (int j = 0; j<col; j++) {
+            m1[i][j] = (Complex){ m2[i][j].real, m2[i][j].img};
+        }
+    }
 }

@@ -9,6 +9,13 @@ typedef struct{
     double img;
 } Complex;
 
+struct argThreadMatrMoltiplication {
+    int dimMatrix;
+    int competence;
+    int indexInit;
+    Complex*** matrix;
+};
+
 //----------------------------------------------------------------------------------------------------------
 //----------------------------OPERATION PROTOTYPE FUNCTION WITH STRUCT DATA---------------------------------
 //----------------------------------------------------------------------------------------------------------

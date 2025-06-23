@@ -1,9 +1,9 @@
-#include <complex.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "dataRecovery.h"
 #include "fileManagement.h"
@@ -61,7 +61,7 @@ int main() {
         const int nQubit = getNqbit(init);
 
         if (nQubit > 0) {
-            printf("numero Qubits: %d\n\n", nQubit);
+            //printf("numero Qubits: %d\n", nQubit);
             //se i qubits esistono e sono > 0 allora definisco la
             //dimensione delle matrici e vettori da qui in avanti
             const int dim = (int)pow(2, nQubit);
@@ -89,8 +89,8 @@ int main() {
 
                     //inizializzo circuit come un array3D dove
                     //1 dim: sono l'ordine di raccorta delle matrici a seconda
-                    //della disposizione di order
-                    //2-3 dim: sono righe e colonne delle matrici
+                    //della disposizione di order (nMatrix)
+                    //2-3 dim: sono righe e colonne delle matrici (dim)
                     Complex*** circuit = getMatrix(dim, circ, nMatrix, order);
                     if (circuit != NULL) {
 
@@ -98,43 +98,107 @@ int main() {
                         for (int i = nMatrix-1; i>=0; i--) {
                             printf("MATRICE : %s\n", order[i]);
                             printMatrix(circuit[i], dim);
-                        }
-                        */
+                        }*/
+                        //controllo se il numero di matrici sia almeno 1
+                        if (nMatrix >= 1) {
+                            //setto un valore massimo di thread che verrebbero utilizzati dato nMatrix
+                            int max = (int)floor((double)nMatrix/2);
+                            int nThread = 0;
 
-                        //inizializzo una matrice identita'
-                        //essenziale per la moltiplicazione
-                        Complex** mulMatrix = createMatrix2D(dim, dim);
-                        for (int i = 0; i<dim; i++) {
-                            for (int j = 0; j<dim; j++) {
-                                mulMatrix[i][j] = (i==j) ? (Complex){1,0} : (Complex){0,0};
+                            printf("scegliere il numero di thread da usare (max %d) : ", max);
+                            scanf("%d", &nThread);
+                            //se il numero in input eccede il massimo lo setto ad esso
+                            if (nThread > max) nThread = max;
+
+                            while (nMatrix != 1){
+                                //setto il "resto" delle matrici dato il numero di thread
+                                int restMatrix = nMatrix - MATRIX_MUL_PARALLEL * nThread;
+
+                                //alloco dinamicamente i parametri dei thread
+                                struct argThreadMatrMoltiplication *args = malloc (sizeof(struct argThreadMatrMoltiplication) * nThread);
+
+                                //inizializzo una variabile che mi andra a contare gli indici di matrici del buffer totale delle matrici
+                                //il buffer e' circuit in questo caso
+                                int indexMatrix = 0;
+                                for (int i = 0; i<nThread; i++) {
+                                    //setto la competenza del thread, che sarebbe quante matrici deve moltiplicare in sequenza
+                                    args[i].competence = MATRIX_MUL_PARALLEL;
+                                    args[i].matrix = circuit;
+                                    //setto da quale indice iniziare a moltiplicare
+                                    args[i].indexInit = indexMatrix;
+                                    //dimensione della matrice dim*dim
+                                    args[i].dimMatrix = dim;
+
+                                    //incremento l'indice
+                                    indexMatrix += MATRIX_MUL_PARALLEL;
+                                }
+
+                                pthread_t threads[nThread];
+
+                                //avvio tutti i thread
+                                for (int i = 0; i<nThread; i++) {
+                                    pthread_create(&threads[i], NULL, mulMatrixThreadFunction, &args[i]);
+                                }
+                                //creo un vettore di matrici, il vettore ha dimensione pari a
+                                //tutti i risultati dei thread + il resto delle matrici
+                                Complex*** ris = createMatrix3D(nThread + restMatrix, dim, dim);
+
+                                //ottengo tutti i risultati dai thread
+                                for (int i = 0; i<nThread; i++) {
+                                    void *retVal;
+                                    pthread_join(threads[i], &retVal);
+                                    ris[i] = (Complex**) retVal;
+                                }
+
+                                //metto nei risultati i resti
+                                for (int i = nThread; i<nThread + restMatrix; i++) {
+                                    copyMatrix(ris[i], circuit[indexMatrix++], dim, dim);
+                                }
+
+                                //ris diventara' il nuovo buffer di matrici quindi
+                                //libero la memoria non piu utilizzata e setto tutti i dati utili
+                                //sulla base di ris
+                                freeMatrix3D(circuit, nMatrix, dim);
+                                nMatrix = nThread + restMatrix;
+                                circuit = ris;
+
+                                //se il numero di thread utili e' minore dei thread usati
+                                //setto il numero di thread usati in quelli utili, senno' no
+                                int newNThread = (int)ceil((double)nMatrix/MATRIX_MUL_PARALLEL);
+                                nThread = (newNThread < nThread )? newNThread : nThread;
+
+                                free(args);
                             }
+
+
+                        }else {
+                            //e' inutile fare dei thread ed inizializzare dati che non verranno utilizzati
+                            printf("NUMERO DI CIRCUITI = 1, MOLTIPLICAZIONE SALTATA\n");
                         }
 
-                        //faccio la moltiplicazione fra le matrici trovate in ordine inverso
-                        for (int i = nMatrix-1; i>=0; i--) {
-                            Complex** temp = matrixMoltiplication(mulMatrix, circuit[i], dim);
-                            freeMatrix2D(mulMatrix, dim);
-                            mulMatrix = temp;
-                        }
+                        Complex **mulMatrixT = createMatrix2D(dim, dim);
+                        //il risultato sara' sicuramente nella prima posizione del buffer
+                        copyMatrix(mulMatrixT, circuit[0], dim, dim);
 
                         //printf("MOLTIPLICAZIONE TRA MATRICI:\n");
-                        //printMatrix(mulMatrix, dim);
+                        //printMatrix(mulMatrixT, dim);
 
                         printf("\nMOLTIPLICAZIONE TRA LA MATRICE MOLTIPLICATA CON IL VETTORE INIT\n");
                         //moltiplico il risultato della moltiplicazione per il vettore init
-                        Complex* result = mulMatrixByVector(mulMatrix, initVector, dim);
-                        printVector(result, dim);
+                        Complex* resultT = mulMatrixByVector(mulMatrixT, initVector, dim);
+                        printVector(resultT, dim);
+
 
                         printf("\nCONTROLLO SULLA CORRETTEZZA: ");
 
                         //controllo se il risultato sia corretto o meno
-                        if (isVectorCorrect(result, dim)) {
+
+                        if (isVectorCorrect(resultT, dim)) {
                             printf("CORRETTO\n");
                         }
                         else { fprintf(stderr, "NON CORRETTO\n"); }
-
-                        freeMatrix2D(mulMatrix, dim);
-                        free(result);
+                        freeMatrix2D(mulMatrixT, dim);
+                        free(resultT);
                     }else { fprintf(stderr ,"ERRORE NELLA DICHIARAZIONE DELLE MATRCICI DI CIRCUITO\n"); }
                     freeMatrix3D(circuit, nMatrix, dim);
                 }else { fprintf(stderr, "ERRORE NELLA DICHIARAZIONE NOMI CIRCUITI\n"); }
