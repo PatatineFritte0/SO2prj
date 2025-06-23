@@ -105,8 +105,10 @@ int main() {
                             int max = (int)floor((double)nMatrix/2);
                             int nThread = 0;
 
-                            printf("scegliere il numero di thread da usare (max %d) : ", max);
+                            printf("scegliere il numero di thread da usare: ");
                             scanf("%d", &nThread);
+                            
+                            if (nThread < 1 ) nThread = 1;
                             //se il numero in input eccede il massimo lo setto ad esso
                             if (nThread > max) nThread = max;
 
