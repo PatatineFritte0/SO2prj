@@ -79,7 +79,7 @@ int count_char(const char* str, char target) {
 
 //questa funzione stampa un numero complesso
 void printComplex(Complex com) {
-    printf("Re: %.4f, img: %.4f", com.real, com.img);
+    printf("Re: %.5f, img: %.5f", com.real, com.img);
 }
 
 //questa funzione stampa un vettore di numeri complessi
