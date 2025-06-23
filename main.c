@@ -100,7 +100,7 @@ int main() {
                             printMatrix(circuit[i], dim);
                         }*/
                         //controllo se il numero di matrici sia almeno 1
-                        if (nMatrix >= 1) {
+                        if (nMatrix > 1) {
                             //setto un valore massimo di thread che verrebbero utilizzati dato nMatrix
                             int max = (int)floor((double)nMatrix/2);
                             int nThread = 0;
