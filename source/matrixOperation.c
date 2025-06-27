@@ -7,11 +7,12 @@
 //in output da una matrice risultante
 void *mulMatrixThreadFunction(void *args) {
     //ottengo i paramentri in input
-    struct argThreadMatrMoltiplication arg = *((struct argThreadMatrMoltiplication *) args);
-    int indexInit = arg.indexInit;
-    int dim = arg.dimMatrix;
-    int competence = arg.competence;
-    Complex*** circuit = arg.matrix;
+    struct argThreadMatrMoltiplication *arg = (struct argThreadMatrMoltiplication *) args;
+
+    int indexInit = arg->indexInit;
+    int dim = arg->dimMatrix;
+    int competence = arg->competence;
+    Complex*** circuit = arg->matrix;
 
     //creo una matrice identita'
     Complex **risMul = createMatrix2D(dim, dim);

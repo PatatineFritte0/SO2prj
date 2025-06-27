@@ -134,27 +134,30 @@ int main() {
                                     //incremento l'indice
                                     indexMatrix += MATRIX_MUL_PARALLEL;
                                 }
-
+                                
                                 pthread_t threads[nThread];
-
+                                
                                 //avvio tutti i thread
-                                for (int i = 0; i<nThread; i++) {
-                                    pthread_create(&threads[i], NULL, mulMatrixThreadFunction, &args[i]);
+                                for (int i = 0; i<nThread; i++){
+                                    if (pthread_create(&threads[i], NULL, mulMatrixThreadFunction, &args[i]) != 0) {
+                                        fprintf(stderr, "Errore nella creazione del thread %d\n", i);
+                                        exit(EXIT_FAILURE);
+                                    }
                                 }
                                 //creo un vettore di matrici, il vettore ha dimensione pari a
                                 //tutti i risultati dei thread + il resto delle matrici
                                 Complex*** ris = createMatrix3D(nThread + restMatrix, dim, dim);
-
-                                //ottengo tutti i risultati dai thread
+                                
+                                 //metto nei risultati i resti
+                                for (int i = nThread; i<nThread + restMatrix; i++) {
+                                    copyMatrix(ris[i], circuit[indexMatrix++], dim, dim);
+                                }
+                                
+                               //ottengo tutti i risultati dai thread
                                 for (int i = 0; i<nThread; i++) {
                                     void *retVal;
                                     pthread_join(threads[i], &retVal);
                                     ris[i] = (Complex**) retVal;
-                                }
-
-                                //metto nei risultati i resti
-                                for (int i = nThread; i<nThread + restMatrix; i++) {
-                                    copyMatrix(ris[i], circuit[indexMatrix++], dim, dim);
                                 }
 
                                 //ris diventara' il nuovo buffer di matrici quindi
@@ -164,10 +167,14 @@ int main() {
                                 nMatrix = nThread + restMatrix;
                                 circuit = ris;
 
-                                //se il numero di thread utili e' minore dei thread usati
-                                //setto il numero di thread usati in quelli utili, senno' no
-                                int newNThread = (int)ceil((double)nMatrix/MATRIX_MUL_PARALLEL);
-                                nThread = (newNThread < nThread )? newNThread : nThread;
+                                // Calcola il numero massimo possibile di thread che rispettano la condizione
+                                int maxUsableThread = nMatrix / MATRIX_MUL_PARALLEL;
+                                if (maxUsableThread < 1) maxUsableThread = 1;
+
+                                // Mantieni il numero di thread più basso tra quello già in uso e il massimo valido
+                                if (nThread > maxUsableThread) {
+                                    nThread = maxUsableThread;
+                                }
 
                                 free(args);
                             }
