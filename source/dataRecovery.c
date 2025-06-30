@@ -15,7 +15,7 @@ int getNqbit (char* init){
     //controllo se il comando e' in init
     while (indexBuffer == 0 && isPresent("#qubits", init, &indexInit)) {
         // salto gli spazi fra lui ed il dato
-        while (init[indexInit] == ' ' || init[indexInit] == '\t'){ indexInit++; }
+        while (init[indexInit] == ' ' || init[indexInit] == '\t' || init[indexInit] == '\n'){ indexInit++; }
         //fin quando e' un numero, lo copio nel buffer
         while (isdigit(init[indexInit]) && indexBuffer < 100) {
             buffer[indexBuffer++] = init[indexInit++];
@@ -33,67 +33,67 @@ int getNqbit (char* init){
 
 //questa funzione cerca di ottenere il vettore init (true)
 //in caso contrario restituisce false
-bool getInitVector(char* init, Complex* vector, int dimention) {
-    int indexBuffer = 0, indexInit = 0;
-    char buffer[100] = "\0";
-
-
-    //controllo se il comando e' in ini
+bool getInitVector(char* init, Complex* vector, int dimension) {
+    int indexInit = 0;
     int nFindNumbers = 0;
-    while (indexBuffer == 0 && isPresent("#init", init, &indexInit)) {
-        memset(buffer, '\0', sizeof(buffer));
-        buffer[0] = '\0';
-        // salto gli spazi fra lui ed il dato
-        while (init[indexInit] == ' ' || init[indexInit] == '\t'){ indexInit++; }
 
-        //controllo se la sintassi e' giusta
+    while (isPresent("#init", init, &indexInit)) {
+        char buffer[100];
+        int indexBuffer = 0;
+        
+        //salto tutti i caratteri che non mi interessa analizzare
+        while (init[indexInit] == ' ' || init[indexInit] == '\t' || init[indexInit] == '\n' || init[indexInit] == '\r') {
+            indexInit++;
+        }
+        
+        //se trovo un apertura di vettore
         if (init[indexInit] == '[') {
-            while (init[indexInit] != ']' && init[indexInit] != '\0') {
-                indexInit++;
-
-                //controllo se i caratteri sono legali per i dati in questione
-                if(init[indexInit] == '+' || init[indexInit] == '-' || init[indexInit] == 'i' || init[indexInit] == '.' || isdigit(init[indexInit])) {
-                    buffer[indexBuffer++] = init[indexInit];
-                }else if (init[indexInit] == ',' || init[indexInit] == ']') { //trovi la fine di un dato
+            indexInit++; // salta '['
+            
+            while (init[indexInit] != '\0') {
+                char ch = init[indexInit];
+                
+                //controllo se la sintassi sia corretta
+                if (ch == '+' || ch == '-' || ch == 'i' || ch == '.' || isdigit(ch)) {
+                    buffer[indexBuffer++] = ch;
+                } else if (ch == ',' || ch == ']') {
+                    //trovo la fine di un numero
                     buffer[indexBuffer] = '\0';
 
-                    if (nFindNumbers >= dimention) break;
-                    if (count_char(buffer, 'i') <= 1) { //mi assicuro che la sintassi sia corretta
-                        //inizializzo il vettore e tramuto la stringa in un numero complesso
-                        vector[nFindNumbers] = (Complex){0,0};
+                    if (nFindNumbers >= dimension) break;
+                    //se non ne ho trovati troppi
+                    if (count_char(buffer, 'i') <= 1) {
+                        //inserisco nel vettore risultante
                         vector[nFindNumbers++] = stringToComplex(buffer);
-                        //vector[nFindNumbers] = stringToComplex("-5");
-
-                        //printf("%s\n", buffer);
-                        //printf("Re: %.4f, img: %.4f \n", vector[nFindNumbers].real, vector[nFindNumbers].img);
-
                     } else {
-                        // c'e un errore di sintassi
-                        buffer[0] = '\0';
-                        indexBuffer = 0;
+                        //il vettore non e' valido
                         nFindNumbers = 0;
                         break;
                     }
-                    //ri inizializzo il buffer
+
                     indexBuffer = 0;
-                 }else if (init[indexInit] == ' ' || init[indexInit] == '\t') {
-                    //niente
-                }else {
-                    //riconosco che c'e' un errore di sintassi
-                    buffer[0] = '\0';
-                    indexBuffer = 0;
+                    //finisco il ciclo non appena trovo la fine di un vettore
+                    if (ch == ']') break;
+                } else if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') {
+                    // ignora
+                } else {
+                    //ho trovato un carattere illegale
                     nFindNumbers = 0;
-                    break; //esco da ciclo e controllo se ci sono altri init validi
+                    break;
                 }
+
+                indexInit++;
+            }
+            //se il dato e' valido
+            if (nFindNumbers == dimension) {
+                return true;
+            } else {
+                nFindNumbers = 0;
             }
         }
     }
-
-    //controllo se sono stati trovati dati validi
-    if (buffer[indexBuffer] == '\0') {
-        return false;
-    }
-    return true;
+    //non ho trovato nessun init valido
+    return false;
 }
 
 //questa funzione restituisce un numero complesso da una stringa
