@@ -1,5 +1,5 @@
 # Compilatore da usare
-CC = gcc
+CC = gcc -std=c90
 
 # Flag per la compilazione:
 # -Iheader: indica dove trovare i file .h

@@ -12,29 +12,53 @@
 #include "header/structure.h"
 #include "header/costants.h"
 
-
-//è possibile migliorare il debug decommentando le linee di codice di print
-
+/* è possibile migliorare il debug decommentando le linee di codice di print */
 
 int main() {
-
+    /*Dichiaro tutte le veriabili utili*/
     char initFile[MAX_CHARACTER_INPUT];
     char circFile[MAX_CHARACTER_INPUT];
 
-    printf(" I DATI DEVONO ESSERE NELLA CARTELLA \"DATA\"\n\n");
+    char *initPath;
+    char *circPath;
+    size_t allocationSize;
 
+    char *circ;  /*contenuto file circ*/
+    char *init; /*contenuto file init*/
+
+    int nQubit;
+    int dim; /*dimensione dei vettori e matrici*/
+    Complex *initVector; /*vettore init*/
+
+    char order[MAX_MATRIX][MAX_NAME_MATRIX];
+    int nMatrix; /*numero di matrici presente in circuit*/
+    Complex ***circuit; /*vettore di matrici ordinate da order*/
+
+    int i; /*indice utile nei cicli for*/
+    int max; /*massimo di thread utili*/
+    int nThread; /*numero di thread in input mssimo utile*/
+    int restMatrix; /*matrici  che non vengono inserite nei  thread*/
+    int indexMatrix; /*indice per capire dove si e' nello scorrimento di circuit*/
+
+    struct argThreadMatrMoltiplication *args; /*argomento dei threads*/
+    pthread_t *threads;  /*i threads*/
+    Complex ***ris; /*vettore di threads momentaneo*/
+    Complex **mulMatrixT; /*il risultato della moltiplicazione dei threads*/
+    Complex *resultT; /*vettore fin*/
+
+    printf(" I DATI DEVONO ESSERE NELLA CARTELLA \"DATA\"\n\n");
+    
+    /*chiedo in input i file*/
     printf(" Fornire il nome del file circ: ");
     scanf("%1024s", circFile);
 
     printf("Fornire il nome del file init: ");
     scanf("%1024s", initFile);
 
-    // Calcolo la lunghezza necessaria per i path completi
-    size_t allocationSize = strlen(INITIAL_FOLDER) + MAX_CHARACTER_INPUT + 1; // +1 per '\0'
+    allocationSize = strlen(INITIAL_FOLDER) + MAX_CHARACTER_INPUT + 1; /* +1 per '\0' */
 
-    // Alloco e costruisco i path
-    char *initPath = malloc(allocationSize);
-    char *circPath = malloc(allocationSize);
+    initPath = (char *) malloc(allocationSize);
+    circPath = (char *) malloc(allocationSize);
 
     if (!initPath || !circPath) {
         fprintf(stderr, "Errore di allocazione\n");
@@ -45,182 +69,158 @@ int main() {
 
     strcpy(initPath, INITIAL_FOLDER);
     strcat(initPath, initFile);
-
+    
+    /*creo la path*/
+    
     strcpy(circPath, INITIAL_FOLDER);
     strcat(circPath, circFile);
 
-    //cerco i file nella directory del programma
-    char *circ = readFile(circPath);
-    char *init = readFile(initPath);
+    circ = readFile(circPath);
+    init = readFile(initPath);
 
     if (circ != NULL && init != NULL) {
-        //printf("%s\n", circ);
-        //printf("%s\n", init);
-
-        //ottengo i qubits
-        const int nQubit = getNqbit(init);
+    
+        /*ottengo i qubit*/
+        nQubit = getNqbit(init);
 
         if (nQubit > 0) {
-            //printf("numero Qubits: %d\n", nQubit);
-            //se i qubits esistono e sono > 0 allora definisco la
-            //dimensione delle matrici e vettori da qui in avanti
-            const int dim = (int)pow(2, nQubit);
+            dim = (int) pow(2.0, (double) nQubit);
 
-            //inizializzo il vettore di init
-            Complex* initVector = malloc( dim * sizeof(Complex) );
-
-            //controllo se esiste il vettore init e setto il valore in initVector
+            initVector = (Complex *) malloc(dim * sizeof(Complex));
+            if (initVector == NULL) {
+                fprintf(stderr, "Errore di allocazione per initVector\n");
+                free(circ);
+                free(init);
+                free(initPath);
+                free(circPath);
+                return 1;
+            }
+            /*ottengo il vettore init*/
             if (getInitVector(init, initVector, dim)) {
-                //printf("VETTORE INIT:\n");
-                //printVector(initVector, dim);
-                //printf("\n");
-
-                //inizializzo order imponendo un massimo di
-                //matrici che puoi dichiarare con il nome annesso
-                char order[MAX_MATRIX][MAX_NAME_MATRIX] = {0};
-                if (getOrderMatrix(circ, order)) {
-
-                    int nMatrix = 0;
-                    //conto tutte le stringhe valide
-                    for (int i = 0; i<MAX_MATRIX; i++) {
-                        if (order[i][0] == '\0') break;
-                        nMatrix++;
+                /*inizializzo order*/
+                for (i = 0; i < MAX_MATRIX; i++) {
+                    int j;
+                    for (j = 0; j < MAX_NAME_MATRIX; j++) {
+                        order[i][j] = 0;
                     }
-
-                    //inizializzo circuit come un array3D dove
-                    //1 dim: sono l'ordine di raccorta delle matrici a seconda
-                    //della disposizione di order (nMatrix)
-                    //2-3 dim: sono righe e colonne delle matrici (dim)
-                    Complex*** circuit = getMatrix(dim, circ, nMatrix, order);
+                }
+                /*ottengo l'ordine di matrici e quindi le matrici utili*/
+                if (getOrderMatrix(circ, order)) {
+                    nMatrix = 0;
+                    for (i = 0; i < MAX_MATRIX; i++) {
+                        if (order[i][0] == '\0') break;
+                        nMatrix++; /*le matrici utili*/
+                    }
+                    /*ottengo  le matrici utili*/
+                    circuit = getMatrix(dim, circ, nMatrix, order);
                     if (circuit != NULL) {
-
-                        /*
-                        for (int i = nMatrix-1; i>=0; i--) {
-                            printf("MATRICE : %s\n", order[i]);
-                            printMatrix(circuit[i], dim);
-                        }*/
-                        //controllo se il numero di matrici sia almeno 1
                         if (nMatrix > 1) {
-                            //setto un valore massimo di thread che verrebbero utilizzati dato nMatrix
-                            int max = (int)floor((double)nMatrix/2);
-                            int nThread = 0;
+                            /*capisco quanti threads mi servono*/
+                            max = (int) floor((double) nMatrix / 2.0);
 
                             printf("scegliere il numero di thread da usare: ");
                             scanf("%d", &nThread);
-                            
-                            if (nThread < 1 ) nThread = 1;
-                            //se il numero in input eccede il massimo lo setto ad esso
+                            /*se inserisce un dato non vali lo rendo valido*/
+                            if (nThread < 1) nThread = 1;
                             if (nThread > max) nThread = max;
 
-                            while (nMatrix != 1){
-                                //setto il "resto" delle matrici dato il numero di thread
-                                int restMatrix = nMatrix - MATRIX_MUL_PARALLEL * nThread;
+                            while (nMatrix != 1) {
+                                /*capisco quante matrici di resto avro' dal numero di threads*/
+                                restMatrix = nMatrix - MATRIX_MUL_PARALLEL * nThread;
+                                
+                                args = (struct argThreadMatrMoltiplication *) malloc(sizeof(struct argThreadMatrMoltiplication) * nThread);
+                                threads = (pthread_t *) malloc(sizeof(pthread_t) * nThread);
 
-                                //alloco dinamicamente i parametri dei thread
-                                struct argThreadMatrMoltiplication *args = malloc (sizeof(struct argThreadMatrMoltiplication) * nThread);
-
-                                //inizializzo una variabile che mi andra a contare gli indici di matrici del buffer totale delle matrici
-                                //il buffer e' circuit in questo caso
-                                int indexMatrix = 0;
-                                for (int i = 0; i<nThread; i++) {
-                                    //setto la competenza del thread, che sarebbe quante matrici deve moltiplicare in sequenza
+                                indexMatrix = 0;
+                                /*inizializzo arg dei threads*/
+                                for (i = 0; i < nThread; i++) {
                                     args[i].competence = MATRIX_MUL_PARALLEL;
                                     args[i].matrix = circuit;
-                                    //setto da quale indice iniziare a moltiplicare
                                     args[i].indexInit = indexMatrix;
-                                    //dimensione della matrice dim*dim
                                     args[i].dimMatrix = dim;
-
-                                    //incremento l'indice
                                     indexMatrix += MATRIX_MUL_PARALLEL;
                                 }
-                                
-                                pthread_t threads[nThread];
-                                
-                                //avvio tutti i thread
-                                for (int i = 0; i<nThread; i++){
-                                    if (pthread_create(&threads[i], NULL, mulMatrixThreadFunction, &args[i]) != 0) {
+
+                                for (i = 0; i < nThread; i++) {
+                                    /*creo i threads*/
+                                    if (pthread_create(&threads[i], NULL, mulMatrixThreadFunction, (void *) &args[i]) != 0) {
                                         fprintf(stderr, "Errore nella creazione del thread %d\n", i);
                                         exit(EXIT_FAILURE);
                                     }
                                 }
-                                //creo un vettore di matrici, il vettore ha dimensione pari a
-                                //tutti i risultati dei thread + il resto delle matrici
-                                Complex*** ris = createMatrix3D(nThread + restMatrix, dim, dim);
-                                
-                                 //metto nei risultati i resti
-                                for (int i = nThread; i<nThread + restMatrix; i++) {
+                                /*creo la matrice ris*/
+                                ris = createMatrix3D(nThread + restMatrix, dim, dim);
+                                /*nel mentre che i thread finiscono le matrici di resto in ris*/
+                                for (i = nThread; i < nThread + restMatrix; i++) {
                                     copyMatrix(ris[i], circuit[indexMatrix++], dim, dim);
                                 }
                                 
-                               //ottengo tutti i risultati dai thread
-                                for (int i = 0; i<nThread; i++) {
+                                /*inserisco in ris il risultato dei threads*/
+                                for (i = 0; i < nThread; i++) {
                                     void *retVal;
                                     pthread_join(threads[i], &retVal);
-                                    ris[i] = (Complex**) retVal;
+                                    ris[i] = (Complex **) retVal;
                                 }
 
-                                //ris diventara' il nuovo buffer di matrici quindi
-                                //libero la memoria non piu utilizzata e setto tutti i dati utili
-                                //sulla base di ris
                                 freeMatrix3D(circuit, nMatrix, dim);
+                                /*aggiorno le variabili utili e calcolo i threads utili*/
                                 nMatrix = nThread + restMatrix;
                                 circuit = ris;
 
-                                // Calcola il numero massimo possibile di thread che rispettano la condizione
-                                int maxUsableThread = nMatrix / MATRIX_MUL_PARALLEL;
-                                if (maxUsableThread < 1) maxUsableThread = 1;
-
-                                // Mantieni il numero di thread più basso tra quello già in uso e il massimo valido
-                                if (nThread > maxUsableThread) {
-                                    nThread = maxUsableThread;
-                                }
+                                max = nMatrix / MATRIX_MUL_PARALLEL;
+                                if (max < 1) max = 1;
+                                if (nThread > max) nThread = max;
 
                                 free(args);
+                                free(threads);
                             }
-
-
-                        }else {
-                            //e' inutile fare dei thread ed inizializzare dati che non verranno utilizzati
+                        } else {
                             printf("NUMERO DI CIRCUITI = 1, MOLTIPLICAZIONE SALTATA\n");
                         }
-
-                        Complex **mulMatrixT = createMatrix2D(dim, dim);
-                        //il risultato sara' sicuramente nella prima posizione del buffer
+                        
+                        /*inserisco in mulmatrix il  risultato dell operazione de fata*/
+                        mulMatrixT = createMatrix2D(dim, dim);
                         copyMatrix(mulMatrixT, circuit[0], dim, dim);
 
-                        //printf("MOLTIPLICAZIONE TRA MATRICI:\n");
-                        //printMatrix(mulMatrixT, dim);
-
                         printf("\nMOLTIPLICAZIONE TRA LA MATRICE MOLTIPLICATA CON IL VETTORE INIT\n");
-                        //moltiplico il risultato della moltiplicazione per il vettore init
-                        Complex* resultT = mulMatrixByVector(mulMatrixT, initVector, dim);
+                        /*faccio la moltiplicazione e stampo il risultato*/
+                        resultT = mulMatrixByVector(mulMatrixT, initVector, dim);
                         printVector(resultT, dim);
 
-
                         printf("\nCONTROLLO SULLA CORRETTEZZA: ");
-
-                        //controllo se il risultato sia corretto o meno
-
+                        /*controllo che tutto sia corretto*/
                         if (isVectorCorrect(resultT, dim)) {
                             printf("CORRETTO\n");
+                        } else {
+                            fprintf(stderr, "NON CORRETTO\n");
                         }
-                        else { fprintf(stderr, "NON CORRETTO\n"); }
+
                         freeMatrix2D(mulMatrixT, dim);
                         free(resultT);
-                    }else { fprintf(stderr ,"ERRORE NELLA DICHIARAZIONE DELLE MATRCICI DI CIRCUITO\n"); }
-                    freeMatrix3D(circuit, nMatrix, dim);
-                }else { fprintf(stderr, "ERRORE NELLA DICHIARAZIONE NOMI CIRCUITI\n"); }
-            }else { fprintf(stderr, "I DATI INIT NON SONO VALIDI O NON PRESENTI NEL FILE\n"); }
+
+                        freeMatrix3D(circuit, nMatrix, dim);
+                    } else {
+                        fprintf(stderr, "ERRORE NELLA DICHIARAZIONE DELLE MATRCICI DI CIRCUITO\n");
+                    }
+                } else {
+                    fprintf(stderr, "ERRORE NELLA DICHIARAZIONE NOMI CIRCUITI\n");
+                }
+            } else {
+                fprintf(stderr, "I DATI INIT NON SONO VALIDI O NON PRESENTI NEL FILE\n");
+            }
             free(initVector);
-        }else { fprintf(stderr, "I QUBITS NON SONO VALIDI O NON PRESENTI NEL FILE\n"); }
-    }else {
+        } else {
+            fprintf(stderr, "I QUBITS NON SONO VALIDI O NON PRESENTI NEL FILE\n");
+        }
+        free(circ);
+        free(init);
+    } else {
         fprintf(stderr, "ERRORE LETTURA FILE\n");
     }
 
     free(circPath);
     free(initPath);
+
     return 0;
 }
-
 

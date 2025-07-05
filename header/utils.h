@@ -3,6 +3,7 @@
 #include <stdbool.h>
 
 #include "structure.h"
+#include "boolCompact.h"
 
 bool isPresent(const char*, const char*, int*);
 bool isVectorCorrect(const Complex*, int);
@@ -13,4 +14,4 @@ void printVector(const Complex*, int);
 void printMatrix(Complex**, int);
 void insert_char(char* , char, int);
 
-#endif //UTILS_H
+#endif /*UTILS_H*/
