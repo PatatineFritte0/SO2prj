@@ -16,7 +16,7 @@ OBJ = $(SRC:.c=.o)
 TARGET = main_exec
 
 # Obiettivo principale: compila, esegue e pulisce
-all: $(TARGET) run clean
+all: $(TARGET)
 
 # Compila l'eseguibile finale
 # Usa main.c e tutti i file oggetto generati da source/*.c
@@ -29,11 +29,3 @@ $(TARGET): main.c $(OBJ)
 %.o: %.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-# Esegue il programma appena compilato
-run:
-	@echo "Esecuzione del programma:"
-	@./$(TARGET)
-
-# Rimuove tutti i file oggetto e l'eseguibile
-clean:
-	@rm -f $(OBJ) $(TARGET)

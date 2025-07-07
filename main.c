@@ -14,7 +14,17 @@
 
 /* è possibile migliorare il debug decommentando le linee di codice di print */
 
-int main() {
+int main(int argc, char *argv[]) {
+    
+    if(argc < 4){
+      fprintf(stderr, "FILE INPUT INSUFFICIENTI\n");
+      exit(0);
+    }
+    
+    if(argc > 4){
+      printf("uso solo i primi 3 parametri in input: initFile, circFile, nThread\n");
+    }
+
     /*Dichiaro tutte le veriabili utili*/
     char initFile[MAX_CHARACTER_INPUT];
     char circFile[MAX_CHARACTER_INPUT];
@@ -22,9 +32,9 @@ int main() {
     char *initPath;
     char *circPath;
     size_t allocationSize;
-
-    char *circ;  /*contenuto file circ*/
-    char *init; /*contenuto file init*/
+    
+    strcpy(initFile, argv[1]); /* nome del file init */
+    strcpy(circFile, argv[2]); /* nome del file circ */
 
     int nQubit;
     int dim; /*dimensione dei vettori e matrici*/
@@ -36,7 +46,18 @@ int main() {
 
     int i; /*indice utile nei cicli for*/
     int max; /*massimo di thread utili*/
-    int nThread; /*numero di thread in input mssimo utile*/
+    
+    i=0;
+    while(argv[3][i] != '\0'){
+      if(!isdigit(argv[3][i++])){
+        fprintf(stderr, "il numero di thread non e' un numero\n");
+        exit(0);
+      }
+    }
+    
+    int nThread = atoi(argv[3]); /*numero di thread in input mssimo utile*/
+    
+    
     int restMatrix; /*matrici  che non vengono inserite nei  thread*/
     int indexMatrix; /*indice per capire dove si e' nello scorrimento di circuit*/
 
@@ -46,14 +67,7 @@ int main() {
     Complex **mulMatrixT; /*il risultato della moltiplicazione dei threads*/
     Complex *resultT; /*vettore fin*/
 
-    printf(" I DATI DEVONO ESSERE NELLA CARTELLA \"DATA\"\n\n");
-    
-    /*chiedo in input i file*/
-    printf(" Fornire il nome del file circ: ");
-    scanf("%1024s", circFile);
-
-    printf("Fornire il nome del file init: ");
-    scanf("%1024s", initFile);
+    printf("I DATI DEVONO ESSERE NELLA CARTELLA \"DATA\"\n\n");
 
     allocationSize = strlen(INITIAL_FOLDER) + MAX_CHARACTER_INPUT + 1; /* +1 per '\0' */
 
@@ -75,8 +89,8 @@ int main() {
     strcpy(circPath, INITIAL_FOLDER);
     strcat(circPath, circFile);
 
-    circ = readFile(circPath);
-    init = readFile(initPath);
+    char *circ = readFile(circPath);
+    char *init = readFile(initPath);
 
     if (circ != NULL && init != NULL) {
     
@@ -117,9 +131,7 @@ int main() {
                         if (nMatrix > 1) {
                             /*capisco quanti threads mi servono*/
                             max = (int) floor((double) nMatrix / 2.0);
-
-                            printf("scegliere il numero di thread da usare: ");
-                            scanf("%d", &nThread);
+                            
                             /*se inserisce un dato non vali lo rendo valido*/
                             if (nThread < 1) nThread = 1;
                             if (nThread > max) nThread = max;
@@ -188,6 +200,7 @@ int main() {
                         printVector(resultT, dim);
 
                         printf("\nCONTROLLO SULLA CORRETTEZZA: ");
+                        fflush(stdout);
                         /*controllo che tutto sia corretto*/
                         if (isVectorCorrect(resultT, dim)) {
                             printf("CORRETTO\n");
