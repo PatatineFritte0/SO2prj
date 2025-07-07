@@ -3,7 +3,11 @@
 **Autore:** Simone Comignani
 
 Il progetto è stato fatto in modo tale che i file siano il più flessibili possibile,  
-ma comunque ci sono dei vincoli da rispettare per far sì che tutto funzioni correttamente.
+ma comunque ci sono dei vincoli da rispettare per far sì che tutto funzioni correttamente. 
+I file in input devono essere nella cartella "data" e devono essere passati nel seguente modo:
+- Init
+- Circ
+- numero thread
 
 ---
 
